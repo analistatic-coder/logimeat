@@ -354,11 +354,16 @@ foreach ($todas as $r) {
                 <div class="pt-3 border-t border-slate-100">
                     <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Columnas visibles (solo Admin/Super Admin)</p>
+                    </div>
+                    <div id="columnasProgramacionWrap" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <button type="button" id="btnAplicarColumnas" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider hover:bg-emerald-700">
+                            Aplicar columnas
+                        </button>
                         <button type="button" id="btnResetColumnas" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-slate-200">
                             Restablecer filas
                         </button>
                     </div>
-                    <div id="columnasProgramacionWrap" class="flex flex-wrap gap-2"></div>
                 </div>
                 <?php endif; ?>
             </form>
@@ -599,22 +604,28 @@ foreach ($todas as $r) {
                 var id = 'col_' + def.key;
                 var label = document.createElement('label');
                 label.setAttribute('for', id);
-                label.className = 'inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-700 cursor-pointer hover:bg-slate-50';
+                label.className = 'inline-flex items-center gap-2 px-2.5 py-2 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-700 cursor-pointer hover:bg-slate-50';
                 var ck = document.createElement('input');
                 ck.type = 'checkbox';
                 ck.id = id;
                 ck.checked = _columnVisibility[def.key] !== false;
                 ck.className = 'rounded border-slate-300 text-emerald-600 focus:ring-emerald-500';
-                ck.addEventListener('change', function () {
-                    _columnVisibility[def.key] = ck.checked;
-                    applyAdminColumnVisibility();
-                });
                 var tx = document.createElement('span');
                 tx.textContent = def.label;
                 label.appendChild(ck);
                 label.appendChild(tx);
                 wrap.appendChild(label);
             });
+        }
+
+        function aplicarSeleccionColumnas() {
+            if (!_esAdminColumnas) return;
+            _columnDefs.forEach(function (def) {
+                var ck = document.getElementById('col_' + def.key);
+                if (!ck) return;
+                _columnVisibility[def.key] = !!ck.checked;
+            });
+            applyAdminColumnVisibility();
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -631,6 +642,12 @@ foreach ($todas as $r) {
             }
             if (_esAdminColumnas) {
                 renderColumnManager();
+                var btnAplicar = document.getElementById('btnAplicarColumnas');
+                if (btnAplicar) {
+                    btnAplicar.addEventListener('click', function () {
+                        aplicarSeleccionColumnas();
+                    });
+                }
                 var btnReset = document.getElementById('btnResetColumnas');
                 if (btnReset) {
                     btnReset.addEventListener('click', function () {
