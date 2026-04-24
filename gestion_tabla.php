@@ -286,6 +286,8 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
         const empleadoCedulaComoPk = <?= $empleado_cedula_como_pk ? 'true' : 'false' ?>;
         const esTablaUser = <?= $es_tabla_user ? 'true' : 'false' ?>;
         const rolesDisponibles = ['Super Admin', 'Administrador', 'Operativo'];
+        const estadosDisponibles = ['ACTIVO', 'INACTIVO'];
+        const accionesDisponibles = ['TODAS', 'CONSULTAR', 'CREAR', 'EDITAR', 'ELIMINAR'];
 
         function abrirModalCrear() {
             document.getElementById('modalTitulo').innerText = "Nuevo Registro";
@@ -319,6 +321,14 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
         function renderizarCampos(datosActuales, esEdicion) {
             const contenedor = document.getElementById('camposDinamicos');
             contenedor.innerHTML = "";
+
+            const opcionesPorColumnaUser = {
+                rol: rolesDisponibles,
+                estado: estadosDisponibles,
+                activo: estadosDisponibles,
+                acciones: accionesDisponibles,
+                accion: accionesDisponibles,
+            };
             
             columnasLista.forEach(col => {
                 const label = document.createElement('label');
@@ -326,21 +336,31 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
                 label.innerText = col.replace('_', ' ');
                 
                 let field = null;
-                if (esTablaUser && col.toLowerCase() === 'rol') {
+                const colLower = col.toLowerCase();
+                if (esTablaUser && Object.prototype.hasOwnProperty.call(opcionesPorColumnaUser, colLower)) {
                     const select = document.createElement('select');
                     select.name = col;
                     select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
                     const valorActual = (datosActuales[col] || '').trim();
-                    const normalizado = valorActual.toUpperCase() === 'ADMIN' ? 'Administrador' : valorActual;
-                    let opciones = rolesDisponibles.slice();
+                    let normalizado = valorActual;
+                    if (colLower === 'rol' && valorActual.toUpperCase() === 'ADMIN') {
+                        normalizado = 'Administrador';
+                    } else if ((colLower === 'estado' || colLower === 'activo') && valorActual !== '') {
+                        if (valorActual.toUpperCase() === 'SI') normalizado = 'ACTIVO';
+                        if (valorActual.toUpperCase() === 'NO') normalizado = 'INACTIVO';
+                        if (valorActual.toUpperCase() === 'TRUE') normalizado = 'ACTIVO';
+                        if (valorActual.toUpperCase() === 'FALSE') normalizado = 'INACTIVO';
+                    }
+                    let opciones = opcionesPorColumnaUser[colLower].slice();
                     if (normalizado !== '' && !opciones.includes(normalizado)) {
                         opciones.unshift(normalizado);
                     }
+                    const defaultCrear = colLower === 'rol' ? 'Operativo' : (colLower === 'acciones' || colLower === 'accion' ? 'TODAS' : 'ACTIVO');
                     opciones.forEach(rol => {
                         const opt = document.createElement('option');
                         opt.value = rol;
                         opt.textContent = rol;
-                        if (rol === normalizado || (!esEdicion && rol === 'Operativo' && normalizado === '')) {
+                        if (rol === normalizado || (!esEdicion && rol === defaultCrear && normalizado === '')) {
                             opt.selected = true;
                         }
                         select.appendChild(opt);
