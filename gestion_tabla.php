@@ -3,7 +3,8 @@ require_once 'auth.php';
 require_once 'conexion.php';
 
 // 1. SEGURIDAD Y PARÁMETROS DE RUTA
-$es_admin = ($_SESSION['rol'] === 'Administrador');
+$es_admin = lm_es_admin();
+$es_super_admin = lm_es_super_admin();
 $tabla_get = $_GET['tabla'] ?? 'clientes'; 
 $tablas_permitidas = [
     'clientes', 'corte', 'departamento', 'municipio', 'opl', 'producto', 'tipo_de_cuarteo', 'zona', 'vehiculo', 'conductor',
@@ -15,7 +16,7 @@ if (!in_array(strtolower($tabla_get), $tablas_permitidas)) {
     header("Location: maestros.php?error=no_autorizado");
     exit();
 }
-if (strtolower($tabla_get) === 'user' && !$es_admin) {
+if (strtolower($tabla_get) === 'user' && !$es_super_admin) {
     header("Location: maestros.php?error=no_autorizado");
     exit();
 }

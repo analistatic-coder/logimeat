@@ -6,7 +6,11 @@ require_once 'conexion.php';
 require_once __DIR__ . '/config/personal_helpers.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
 
-$esAdmin = ($_SESSION['rol'] ?? '') === 'Administrador';
+$esAdmin = lm_es_admin();
+if (!$esAdmin) {
+    header('Location: index.php');
+    exit();
+}
 $etiquetasPlanta = programacion_plantas_opciones();
 
 $anio = isset($_GET['anio']) ? max(2020, min(2035, (int) $_GET['anio'])) : 2026;

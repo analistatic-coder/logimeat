@@ -1,6 +1,11 @@
 <?php 
 require_once 'auth.php'; 
 
+if (!lm_es_admin()) {
+    header('Location: index.php');
+    exit();
+}
+
 $secciones_maestros = [
     [
         'titulo' => 'Maestros logísticos',
@@ -30,14 +35,17 @@ $secciones_maestros = [
             ['href' => 'tablero_descansos.php', 'label' => 'Tablero descansos y turnos', 'icon' => '📋'],
         ],
     ],
-    [
+];
+
+if (lm_es_super_admin()) {
+    $secciones_maestros[] = [
         'titulo' => 'Seguridad y acceso',
         'descripcion' => 'Administración de cuentas del sistema (crear, editar y eliminar usuarios).',
         'items' => [
             ['id' => 'user', 'label' => 'Usuarios', 'icon' => '🔐'],
         ],
-    ],
-];
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">

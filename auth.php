@@ -1,6 +1,28 @@
 <?php
 session_start();
 
+function lm_rol_actual(): string
+{
+    return trim((string) ($_SESSION['rol'] ?? 'Operativo'));
+}
+
+function lm_es_super_admin(): bool
+{
+    return strcasecmp(lm_rol_actual(), 'Super Admin') === 0;
+}
+
+function lm_es_admin(): bool
+{
+    $rol = strtoupper(lm_rol_actual());
+
+    return lm_es_super_admin() || $rol === 'ADMINISTRADOR' || $rol === 'ADMIN';
+}
+
+function lm_es_operativo(): bool
+{
+    return !lm_es_admin();
+}
+
 /**
  * 1. SEGURIDAD: CADUCIDAD DE SESIÓN (15 MINUTOS)
  */
@@ -27,7 +49,9 @@ $_SESSION['ultima_actividad'] = time();
  * 2. SIDEBAR: MENÚ LATERAL FIJO
  */
 function mostrarSidebar($activePage = '') {
-    $rol = $_SESSION['rol'] ?? 'Operativo';
+    $rol = lm_rol_actual();
+    $verTablero = !lm_es_operativo();
+    $verConfiguracion = lm_es_admin();
     ?>
     <aside class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-50">
         <div class="p-8">
@@ -52,11 +76,13 @@ function mostrarSidebar($activePage = '') {
                 <a href="otif.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'otif' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">
                     <span>🎯</span> <span class="text-sm font-bold">Calidad OTIF</span>
                 </a>
+                <?php if($verTablero): ?>
                 <a href="tablero_descansos.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'tablero' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">
                     <span>📋</span> <span class="text-sm font-bold">Tablero personal</span>
                 </a>
+                <?php endif; ?>
                 
-                <?php if($rol === 'Administrador'): ?>
+                <?php if($verConfiguracion): ?>
                 <div class="pt-6 mt-6 border-t border-slate-800">
                     <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Ajustes</p>
                     <a href="maestros.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'maestros' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">

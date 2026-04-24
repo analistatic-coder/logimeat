@@ -21,8 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['nombre'] = $usuario['Nombre'];
         $rolRaw = trim((string) ($usuario['Rol'] ?? ''));
         $rolU = strtoupper($rolRaw);
-        // Excel/BD usan ADMIN; la app usa "Administrador" en rutas protegidas
-        $_SESSION['rol'] = ($rolU === 'ADMIN' || $rolU === 'ADMINISTRADOR') ? 'Administrador' : $rolRaw;
+        $nombreU = strtoupper(trim((string) ($usuario['Nombre'] ?? '')));
+        if ($nombreU === 'ANALISTA TIC') {
+            $_SESSION['rol'] = 'Super Admin';
+        } elseif ($rolU === 'ADMIN' || $rolU === 'ADMINISTRADOR') {
+            $_SESSION['rol'] = 'Administrador';
+        } elseif ($rolU === 'AUXILIAR' || $rolU === 'OPERATIVO') {
+            $_SESSION['rol'] = 'Operativo';
+        } else {
+            $_SESSION['rol'] = $rolRaw !== '' ? $rolRaw : 'Operativo';
+        }
         $_SESSION['ultima_actividad'] = time(); 
         header("Location: index.php");
         exit();

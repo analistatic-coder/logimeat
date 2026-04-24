@@ -7,7 +7,7 @@ require_once 'auth.php';
 require_once 'conexion.php';
 require_once __DIR__ . '/config/import_empleados_csv.php';
 
-if (($_SESSION['rol'] ?? '') !== 'Administrador') {
+if (!lm_es_admin()) {
     header('Location: index.php');
     exit();
 }
