@@ -48,6 +48,7 @@ if ($columna_pk === null) {
 
 $es_tabla_empleado = strtolower($tabla_get) === 'empleado';
 $empleado_cedula_como_pk = $es_tabla_empleado && strtoupper((string) $columna_pk) === 'ID_EMPLEADO';
+$es_tabla_user = strtolower($tabla_get) === 'user';
 
 /**
  * Genera el siguiente ID de negocio (servidor; no confiar en el formulario).
@@ -283,6 +284,8 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
         const columnasLista = <?= json_encode($columnas_vista) ?>;
         const columnaPk = <?= json_encode($columna_pk) ?>;
         const empleadoCedulaComoPk = <?= $empleado_cedula_como_pk ? 'true' : 'false' ?>;
+        const esTablaUser = <?= $es_tabla_user ? 'true' : 'false' ?>;
+        const rolesDisponibles = ['Super Admin', 'Administrador', 'Operativo'];
 
         function abrirModalCrear() {
             document.getElementById('modalTitulo').innerText = "Nuevo Registro";
@@ -322,30 +325,64 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
                 label.className = "block text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 mt-4 tracking-widest";
                 label.innerText = col.replace('_', ' ');
                 
-                const input = document.createElement('input');
-                input.type = "text";
-                input.name = col;
-                input.value = datosActuales[col] || "";
-                input.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/20 transition-all";
+                let field = null;
+                if (esTablaUser && col.toLowerCase() === 'rol') {
+                    const select = document.createElement('select');
+                    select.name = col;
+                    select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
+                    const valorActual = (datosActuales[col] || '').trim();
+                    const normalizado = valorActual.toUpperCase() === 'ADMIN' ? 'Administrador' : valorActual;
+                    let opciones = rolesDisponibles.slice();
+                    if (normalizado !== '' && !opciones.includes(normalizado)) {
+                        opciones.unshift(normalizado);
+                    }
+                    opciones.forEach(rol => {
+                        const opt = document.createElement('option');
+                        opt.value = rol;
+                        opt.textContent = rol;
+                        if (rol === normalizado || (!esEdicion && rol === 'Operativo' && normalizado === '')) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                    field = select;
+                } else {
+                    const input = document.createElement('input');
+                    input.type = "text";
+                    input.name = col;
+                    input.value = datosActuales[col] || "";
+                    input.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/20 transition-all";
+                    field = input;
+                }
                 
                 // --- REGLAS DE BLOQUEO Y ESTILO ---
                 if (columnaPk && col.toLowerCase() === String(columnaPk).toLowerCase()) {
                     if (empleadoCedulaComoPk && !esEdicion) {
-                        input.placeholder = 'Cédula (ID empleado)';
+                        if (field.tagName === 'INPUT') {
+                            field.placeholder = 'Cédula (ID empleado)';
+                        }
                     } else {
-                        input.readOnly = true;
-                        input.tabIndex = -1;
-                        input.autocomplete = 'off';
-                        input.classList.add('id-interno-style');
+                        if (field.tagName === 'INPUT') {
+                            field.readOnly = true;
+                            field.tabIndex = -1;
+                            field.autocomplete = 'off';
+                        } else {
+                            field.disabled = true;
+                        }
+                        field.classList.add('id-interno-style');
                     }
                 } else if (col === nombreColIDNegocio) {
-                    input.readOnly = true;
-                    input.tabIndex = -1;
-                    input.classList.add('input-locked');
+                    if (field.tagName === 'INPUT') {
+                        field.readOnly = true;
+                        field.tabIndex = -1;
+                    } else {
+                        field.disabled = true;
+                    }
+                    field.classList.add('input-locked');
                 }
 
                 contenedor.appendChild(label);
-                contenedor.appendChild(input);
+                contenedor.appendChild(field);
             });
         }
 
