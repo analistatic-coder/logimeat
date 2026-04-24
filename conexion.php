@@ -24,6 +24,12 @@ if (is_readable($localConfigPath)) {
     }
 }
 
+// Endurece despliegue en servidor: evita intentar acceso sin contraseña
+// cuando la intención operativa es root/root.
+if (!isset($config['pass']) || trim((string) $config['pass']) === '') {
+    $config['pass'] = 'root';
+}
+
 $dsn = sprintf(
     'mysql:host=%s;dbname=%s;port=%d;charset=%s',
     (string) $config['host'],
