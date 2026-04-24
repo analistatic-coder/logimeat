@@ -5,6 +5,8 @@ require_once 'auth.php';
 require_once 'conexion.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
 
+$puedeSeleccionColumnas = lm_es_admin();
+
 $desde = isset($_GET['desde']) ? trim((string) $_GET['desde']) : '';
 $hasta = isset($_GET['hasta']) ? trim((string) $_GET['hasta']) : '';
 $buscar = isset($_GET['buscar']) ? trim((string) $_GET['buscar']) : '';
@@ -348,6 +350,17 @@ foreach ($todas as $r) {
                     <input type="search" id="refinarCliente" autocomplete="off" placeholder="Texto instantáneo sin recargar…"
                            class="flex-1 min-w-[180px] max-w-md px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/20">
                 </div>
+                <?php if ($puedeSeleccionColumnas): ?>
+                <div class="pt-3 border-t border-slate-100">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Columnas visibles (solo Admin/Super Admin)</p>
+                        <button type="button" id="btnResetColumnas" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-slate-200">
+                            Restablecer filas
+                        </button>
+                    </div>
+                    <div id="columnasProgramacionWrap" class="flex flex-wrap gap-2"></div>
+                </div>
+                <?php endif; ?>
             </form>
 
             <?php
@@ -493,6 +506,41 @@ foreach ($todas as $r) {
 
     <script>
         var _progRefinarTimer = null;
+        var _columnVisibility = {};
+        var _columnDefs = [
+            { i: 1, key: 'codigo', label: 'Cód.' },
+            { i: 2, key: 'id_programacion', label: 'ID prog.' },
+            { i: 3, key: 'f_registro', label: 'F. registro' },
+            { i: 4, key: 'solicitante', label: 'Solicitante' },
+            { i: 5, key: 'medio', label: 'Medio' },
+            { i: 6, key: 'estado_pedido', label: 'Estado pedido' },
+            { i: 7, key: 'cliente', label: 'Cliente' },
+            { i: 8, key: 'n_planta', label: 'Nº planta' },
+            { i: 9, key: 'planta_nombre', label: 'Planta (nombre)' },
+            { i: 10, key: 'planta_op', label: 'Planta op.' },
+            { i: 11, key: 'actividad', label: 'Actividad' },
+            { i: 12, key: 'f_operacion', label: 'F. operación' },
+            { i: 13, key: 'hora', label: 'Hora' },
+            { i: 14, key: 'producto', label: 'Producto' },
+            { i: 15, key: 't_cuarteo', label: 'T. cuarteo' },
+            { i: 16, key: 'lote', label: 'Lote' },
+            { i: 17, key: 'cantidad', label: 'Cantidad' },
+            { i: 18, key: 'ciudad', label: 'Ciudad' },
+            { i: 19, key: 'destino', label: 'Destino' },
+            { i: 20, key: 'ubicacion', label: 'Ubicación' },
+            { i: 21, key: 'opl', label: 'OPL' },
+            { i: 22, key: 'conductor', label: 'Conductor' },
+            { i: 23, key: 'vehiculo', label: 'Vehículo' },
+            { i: 24, key: 'obs', label: 'Observaciones' },
+            { i: 25, key: 'cant_ok', label: 'Cant. OK' },
+            { i: 26, key: 'prod_ok', label: 'Prod. OK' },
+            { i: 27, key: 'ent_tiempo', label: 'Entr. tiempo' },
+            { i: 28, key: 'dir_ok', label: 'Dir. OK' },
+            { i: 29, key: 'ped_perf', label: 'Ped. perf.' },
+            { i: 30, key: 'estado_actividad', label: 'Estado act.' },
+            { i: 31, key: 'telefono', label: 'Teléfono' }
+        ];
+        var _esAdminColumnas = <?= $puedeSeleccionColumnas ? 'true' : 'false' ?>;
 
         /** Filtra filas usando data-search (sin innerText; no bloquea el navegador). */
         function aplicarRefinarCliente() {
@@ -523,7 +571,50 @@ foreach ($todas as $r) {
             document.querySelectorAll('.col-meta').forEach(function (el) {
                 el.classList.toggle('hidden', !showMeta);
             });
+            applyAdminColumnVisibility();
             aplicarRefinarCliente();
+        }
+
+        function applyAdminColumnVisibility() {
+            if (!_esAdminColumnas) return;
+            document.querySelectorAll('.prog-table').forEach(function (tb) {
+                _columnDefs.forEach(function (def) {
+                    var visible = _columnVisibility[def.key] !== false;
+                    tb.querySelectorAll('tr').forEach(function (tr) {
+                        var cell = tr.children[def.i - 1];
+                        if (!cell) return;
+                        cell.classList.toggle('hidden', !visible);
+                    });
+                });
+            });
+        }
+
+        function renderColumnManager() {
+            if (!_esAdminColumnas) return;
+            var wrap = document.getElementById('columnasProgramacionWrap');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            _columnDefs.forEach(function (def) {
+                if (_columnVisibility[def.key] === undefined) _columnVisibility[def.key] = true;
+                var id = 'col_' + def.key;
+                var label = document.createElement('label');
+                label.setAttribute('for', id);
+                label.className = 'inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-700 cursor-pointer hover:bg-slate-50';
+                var ck = document.createElement('input');
+                ck.type = 'checkbox';
+                ck.id = id;
+                ck.checked = _columnVisibility[def.key] !== false;
+                ck.className = 'rounded border-slate-300 text-emerald-600 focus:ring-emerald-500';
+                ck.addEventListener('change', function () {
+                    _columnVisibility[def.key] = ck.checked;
+                    applyAdminColumnVisibility();
+                });
+                var tx = document.createElement('span');
+                tx.textContent = def.label;
+                label.appendChild(ck);
+                label.appendChild(tx);
+                wrap.appendChild(label);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -537,6 +628,21 @@ foreach ($todas as $r) {
                 ref.addEventListener('search', function () {
                     if (ref.value === '') aplicarRefinarCliente();
                 });
+            }
+            if (_esAdminColumnas) {
+                renderColumnManager();
+                var btnReset = document.getElementById('btnResetColumnas');
+                if (btnReset) {
+                    btnReset.addEventListener('click', function () {
+                        _columnDefs.forEach(function (def) { _columnVisibility[def.key] = true; });
+                        renderColumnManager();
+                        var tc = document.getElementById('toggleCalidad');
+                        var tm = document.getElementById('toggleMeta');
+                        if (tc) tc.checked = true;
+                        if (tm) tm.checked = true;
+                        applyProgColumnToggles();
+                    });
+                }
             }
             applyProgColumnToggles();
         });
