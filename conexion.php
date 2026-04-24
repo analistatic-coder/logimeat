@@ -11,7 +11,7 @@ $config = [
     'host' => getenv('DB_HOST') ?: '127.0.0.1',
     'db' => getenv('DB_NAME') ?: 'db_logimeat',
     'user' => getenv('DB_USER') ?: 'root',
-    'pass' => getenv('DB_PASS') ?: '',
+    'pass' => getenv('DB_PASS') ?: 'root',
     'port' => (int) (getenv('DB_PORT') ?: '3306'),
     'charset' => getenv('DB_CHARSET') ?: 'utf8mb4',
 ];
