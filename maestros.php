@@ -20,14 +20,21 @@ $secciones_maestros = [
     ],
     [
         'titulo' => 'Personal y turnos',
-        'descripcion' => 'Empleados, descansos y programación. Orden sugerido: empleados → descansos → programación.',
+        'descripcion' => 'Empleados, descansos y manejo de personal. Orden sugerido: empleados → descansos → manejo de personal.',
         'items' => [
             ['id' => 'empleado', 'label' => 'Empleados', 'icon' => '👤'],
             ['id' => 'empleado_descanso', 'label' => 'Descansos y ausencias', 'icon' => '🛌'],
-            ['id' => 'empleado_programacion', 'label' => 'Programación de personal', 'icon' => '🕐'],
+            ['id' => 'empleado_programacion', 'label' => 'Manejo de personal', 'icon' => '🕐'],
         ],
         'extra_links' => [
             ['href' => 'tablero_descansos.php', 'label' => 'Tablero descansos y turnos', 'icon' => '📋'],
+        ],
+    ],
+    [
+        'titulo' => 'Seguridad y acceso',
+        'descripcion' => 'Administración de cuentas del sistema (crear, editar y eliminar usuarios).',
+        'items' => [
+            ['id' => 'user', 'label' => 'Usuarios', 'icon' => '🔐'],
         ],
     ],
 ];

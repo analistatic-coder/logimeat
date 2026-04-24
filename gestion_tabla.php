@@ -15,6 +15,10 @@ if (!in_array(strtolower($tabla_get), $tablas_permitidas)) {
     header("Location: maestros.php?error=no_autorizado");
     exit();
 }
+if (strtolower($tabla_get) === 'user' && !$es_admin) {
+    header("Location: maestros.php?error=no_autorizado");
+    exit();
+}
 
 $titulo_modulo = strtoupper(str_replace('_', ' ', $tabla_get));
 
