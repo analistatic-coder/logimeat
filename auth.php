@@ -104,6 +104,9 @@ function mostrarSidebar($activePage = '') {
             <a href="cambiar_password.php" class="flex items-center justify-center gap-2 p-3 w-full mb-2 bg-slate-800/80 text-slate-200 rounded-xl text-[11px] font-bold hover:bg-slate-700 hover:text-white transition-all border border-slate-700/80">
                 🔑 Cambiar contraseña
             </a>
+            <a href="http://192.168.20.205:8000/site.html" class="flex items-center justify-center gap-2 p-3 w-full mb-2 bg-slate-800/80 text-slate-200 rounded-xl text-[11px] font-bold hover:bg-slate-700 hover:text-white transition-all border border-slate-700/80">
+                ↩ Volver a WORKBEEF
+            </a>
             <a href="login.php?action=logout" class="flex items-center justify-center gap-2 p-3 w-full bg-red-500/10 text-red-500 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition-all">
                 CERRAR SESIÓN
             </a>

@@ -63,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <input type="password" name="clave" placeholder="CONTRASEÑA" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
             <button type="submit" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-bold hover:bg-blue-700 transition-all uppercase text-xs tracking-widest">Ingresar</button>
         </form>
+        <a href="http://192.168.20.205:8000/site.html" class="mt-4 w-full inline-flex items-center justify-center p-4 rounded-2xl bg-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
+            Volver a WORKBEEF
+        </a>
     </div>
     <div class="mt-8 text-center text-slate-500">
         <p class="text-[10px] font-bold uppercase tracking-widest">Colbeef SAS - 2026</p>
