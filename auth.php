@@ -53,7 +53,7 @@ function mostrarSidebar($activePage = '') {
     $verTablero = !lm_es_operativo();
     $verConfiguracion = lm_es_admin();
     ?>
-    <aside class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-50">
+    <aside id="appSidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-50 transition-transform duration-200">
         <div class="p-8">
             <div class="flex items-center gap-3 mb-10">
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-900/50">L</div>
@@ -112,6 +112,51 @@ function mostrarSidebar($activePage = '') {
             </a>
         </div>
     </aside>
+    <button id="sidebarToggleBtn" type="button" class="fixed left-3 top-3 z-[70] w-9 h-9 rounded-lg bg-slate-900 text-white text-sm font-black shadow-lg hover:bg-slate-700 transition-colors" title="Mostrar / ocultar menú">
+        ✕
+    </button>
+    <script>
+    (function () {
+        var KEY = 'lm_sidebar_hidden';
+        function applySidebarState(hidden) {
+            var sidebar = document.getElementById('appSidebar');
+            var btn = document.getElementById('sidebarToggleBtn');
+            if (!sidebar || !btn) return;
+
+            sidebar.style.transform = hidden ? 'translateX(-100%)' : 'translateX(0)';
+            btn.textContent = hidden ? '☰' : '✕';
+            btn.title = hidden ? 'Mostrar menú' : 'Ocultar menú';
+
+            document.querySelectorAll('body > div.flex-1').forEach(function (el) {
+                el.style.marginLeft = hidden ? '0' : '16rem';
+                el.style.width = hidden ? '100%' : 'calc(100% - 16rem)';
+            });
+
+            var footer = document.getElementById('appFooter');
+            if (footer) {
+                footer.style.marginLeft = hidden ? '0' : '16rem';
+            }
+        }
+
+        function initSidebarToggle() {
+            var btn = document.getElementById('sidebarToggleBtn');
+            if (!btn) return;
+            var hidden = localStorage.getItem(KEY) === '1';
+            applySidebarState(hidden);
+            btn.addEventListener('click', function () {
+                hidden = !hidden;
+                localStorage.setItem(KEY, hidden ? '1' : '0');
+                applySidebarState(hidden);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSidebarToggle, { once: true });
+        } else {
+            initSidebarToggle();
+        }
+    })();
+    </script>
     <?php
 }
 
@@ -123,7 +168,7 @@ function mostrarFooter() {
     ?>
     <div class="clear-both w-full h-1"></div>
     
-    <footer class="ml-64 mt-auto py-10 border-t border-slate-100 bg-white">
+    <footer id="appFooter" class="ml-64 mt-auto py-10 border-t border-slate-100 bg-white">
         <div class="max-w-7xl mx-auto px-10 flex flex-col md:flex-row justify-between items-center gap-4">
             
             <div class="flex items-center gap-2">
