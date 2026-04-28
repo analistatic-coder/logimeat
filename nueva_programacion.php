@@ -49,6 +49,7 @@ $estadosActividad = [];
 $municipios = [];
 $conductores = [];
 $vehiculos = [];
+$opls = [];
 try {
     $solicitantes = $pdo->query('SELECT ID_Solicitante, Solicitante FROM solicitante ORDER BY Solicitante ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable) {
@@ -75,6 +76,10 @@ try {
 }
 try {
     $vehiculos = $pdo->query('SELECT ID_Vehiculo, Vehiculo FROM vehiculo ORDER BY Vehiculo ASC')->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable) {
+}
+try {
+    $opls = $pdo->query('SELECT ID_OPL, OPL FROM opl ORDER BY OPL ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable) {
 }
 
@@ -248,7 +253,22 @@ try {
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">OPL / vínculo</label>
-                    <input type="text" name="opl" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" placeholder="Código o ID OPL">
+                    <select name="opl" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                        <option value="">— Opcional —</option>
+                        <?php foreach ($opls as $o): ?>
+                            <?php
+                                $idOpl = trim((string) ($o['ID_OPL'] ?? ''));
+                                $nombreOpl = trim((string) ($o['OPL'] ?? ''));
+                                if ($idOpl === '' && $nombreOpl === '') {
+                                    continue;
+                                }
+                                $labelOpl = $nombreOpl !== '' ? $nombreOpl : $idOpl;
+                            ?>
+                            <option value="<?= htmlspecialchars($idOpl !== '' ? $idOpl : $labelOpl) ?>">
+                                <?= htmlspecialchars($labelOpl) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Conductor</label>
