@@ -184,6 +184,118 @@ function mostrarSidebar($activePage = '') {
         }
     })();
     </script>
+    <div id="lm-app-loading" class="lm-app-loading" role="status" aria-live="polite" aria-busy="true">
+        <div class="lm-app-loading-card">
+            <div class="lm-app-loading-spinner" aria-hidden="true"></div>
+            <p class="lm-app-loading-text">Cargando…</p>
+        </div>
+    </div>
+    <style>
+        #lm-app-loading.lm-app-loading-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.22s ease, visibility 0.22s ease;
+        }
+        #lm-app-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.22s ease, visibility 0.22s ease;
+        }
+        .lm-app-loading-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.75rem 2.25rem;
+            background: #fff;
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+        }
+        .lm-app-loading-spinner {
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 9999px;
+            border: 4px solid rgba(16, 185, 129, 0.2);
+            border-top-color: #10b981;
+            animation: lm-app-loading-spin 0.7s linear infinite;
+        }
+        .lm-app-loading-text {
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #475569;
+        }
+        @keyframes lm-app-loading-spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+    (function () {
+        var el = document.getElementById('lm-app-loading');
+        if (!el) return;
+
+        function show() {
+            el.classList.remove('lm-app-loading-hidden');
+            el.setAttribute('aria-busy', 'true');
+        }
+        function hide() {
+            el.classList.add('lm-app-loading-hidden');
+            el.setAttribute('aria-busy', 'false');
+        }
+
+        window.lmShowLoading = show;
+        window.lmHideLoading = hide;
+
+        function scheduleHide() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () {
+                    requestAnimationFrame(function () { requestAnimationFrame(hide); });
+                }, { once: true });
+            } else {
+                requestAnimationFrame(function () { requestAnimationFrame(hide); });
+            }
+        }
+        scheduleHide();
+        window.addEventListener('load', hide);
+        window.addEventListener('pageshow', function (ev) {
+            if (ev.persisted) hide();
+        });
+
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[href]');
+            if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+            var href = a.getAttribute('href');
+            if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+            try {
+                var u = new URL(a.href, window.location.href);
+                if (u.origin !== window.location.origin) return;
+            } catch (err) {
+                return;
+            }
+            show();
+        }, true);
+
+        document.addEventListener('submit', function (e) {
+            if (e.target && e.target.tagName === 'FORM') {
+                show();
+            }
+        }, true);
+    })();
+    </script>
     <?php
 }
 
