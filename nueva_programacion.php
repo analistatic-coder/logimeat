@@ -11,6 +11,33 @@ $nextInterno = programacion_siguiente_id_interno_preview($pdo);
 $clientes = $pdo->query('SELECT ID_Cliente, Cliente FROM Clientes ORDER BY Cliente ASC')->fetchAll(PDO::FETCH_ASSOC);
 $actividades = $pdo->query('SELECT ID_Actividad, Actividad FROM Actividad ORDER BY Actividad ASC')->fetchAll(PDO::FETCH_ASSOC);
 
+$actividadesRequeridas = [
+    'TRASLADO A PCC',
+    'ENTREGA INTERNA',
+    'MOVIMIENTO INTERNO',
+    'TRASLADO INTERNO',
+    'ALISTAMIENTO',
+    'REPROCESO',
+];
+$actividadesIndex = [];
+foreach ($actividades as $a) {
+    $nombreAct = trim((string) ($a['Actividad'] ?? ''));
+    if ($nombreAct === '') {
+        continue;
+    }
+    $actividadesIndex[mb_strtoupper($nombreAct)] = true;
+}
+foreach ($actividadesRequeridas as $nombreReq) {
+    $keyReq = mb_strtoupper($nombreReq);
+    if (isset($actividadesIndex[$keyReq])) {
+        continue;
+    }
+    $actividades[] = [
+        'ID_Actividad' => $nombreReq,
+        'Actividad' => $nombreReq,
+    ];
+}
+
 $plantas = programacion_plantas_opciones();
 $productosJson = json_encode(programacion_productos_por_planta(), JSON_UNESCAPED_UNICODE);
 $cuarteoJson = json_encode(programacion_tipos_cuarteo_por_planta(), JSON_UNESCAPED_UNICODE);
