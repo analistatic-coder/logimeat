@@ -17,6 +17,8 @@ $cuarteoJson = json_encode(programacion_tipos_cuarteo_por_planta(), JSON_UNESCAP
 
 $solicitantes = [];
 $medios = [];
+$estadosPedido = [];
+$estadosActividad = [];
 $municipios = [];
 $conductores = [];
 $vehiculos = [];
@@ -26,6 +28,14 @@ try {
 }
 try {
     $medios = $pdo->query('SELECT ID_Medio_Comunicacion, Medio_de_Comunicacion FROM medio_de_comunicacion ORDER BY Medio_de_Comunicacion ASC')->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable) {
+}
+try {
+    $estadosPedido = $pdo->query('SELECT ID_Estado, Estado FROM estado ORDER BY Estado ASC')->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable) {
+}
+try {
+    $estadosActividad = $pdo->query('SELECT ID_Estado_Actividad, Estado_Actividad FROM estado_actividad ORDER BY Estado_Actividad ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable) {
 }
 try {
@@ -110,7 +120,22 @@ try {
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Estado (pedido / registro)</label>
                     <select name="estado_pedido" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
-                        <option value="PROGRAMADO" selected>PROGRAMADO</option>
+                        <?php if ($estadosPedido !== []): ?>
+                            <?php foreach ($estadosPedido as $ep): ?>
+                                <?php
+                                    $labelEstado = trim((string) ($ep['Estado'] ?? ''));
+                                    if ($labelEstado === '') {
+                                        continue;
+                                    }
+                                ?>
+                                <option value="<?= htmlspecialchars($labelEstado) ?>" <?= strcasecmp($labelEstado, 'PROGRAMADO') === 0 ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($labelEstado) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="PROGRAMADO" selected>PROGRAMADO</option>
+                            <option value="ADICIONAL">ADICIONAL</option>
+                        <?php endif; ?>
                     </select>
                 </div>
             </section>
@@ -223,9 +248,23 @@ try {
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Estado actividad</label>
                     <select name="estado_actividad" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
-                        <option value="PROGRAMADO" selected>PROGRAMADO</option>
-                        <option value="EJECUTADO">EJECUTADO</option>
-                        <option value="CANCELADO">CANCELADO</option>
+                        <?php if ($estadosActividad !== []): ?>
+                            <?php foreach ($estadosActividad as $ea): ?>
+                                <?php
+                                    $labelEstadoActividad = trim((string) ($ea['Estado_Actividad'] ?? ''));
+                                    if ($labelEstadoActividad === '') {
+                                        continue;
+                                    }
+                                ?>
+                                <option value="<?= htmlspecialchars($labelEstadoActividad) ?>" <?= strcasecmp($labelEstadoActividad, 'PROGRAMADO') === 0 ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($labelEstadoActividad) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="PROGRAMADO" selected>PROGRAMADO</option>
+                            <option value="EJECUTADO">EJECUTADO</option>
+                            <option value="CANCELADO">CANCELADO</option>
+                        <?php endif; ?>
                     </select>
                 </div>
                 <div>

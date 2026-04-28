@@ -85,8 +85,26 @@ if ($ciudadRaw !== '' && is_numeric($ciudadRaw)) {
     $ciudadVal = $ciudadRaw;
 }
 
-$estadoPedido = $estadoPedido !== '' ? $estadoPedido : 'PROGRAMADO';
-$estadoAct = in_array($estadoAct, ['PROGRAMADO', 'EJECUTADO', 'CANCELADO'], true) ? $estadoAct : 'PROGRAMADO';
+$estadoPedidoPermitidos = ['PROGRAMADO', 'ADICIONAL'];
+try {
+    $rowsEstado = $pdo->query('SELECT Estado FROM estado ORDER BY Estado ASC')->fetchAll(PDO::FETCH_COLUMN);
+    if (is_array($rowsEstado) && $rowsEstado !== []) {
+        $estadoPedidoPermitidos = array_values(array_filter(array_map(static fn ($v): string => trim((string) $v), $rowsEstado), static fn (string $v): bool => $v !== ''));
+    }
+} catch (Throwable) {
+}
+
+$estadoActividadPermitidos = ['PROGRAMADO', 'EJECUTADO', 'CANCELADO'];
+try {
+    $rowsEstadoActividad = $pdo->query('SELECT Estado_Actividad FROM estado_actividad ORDER BY Estado_Actividad ASC')->fetchAll(PDO::FETCH_COLUMN);
+    if (is_array($rowsEstadoActividad) && $rowsEstadoActividad !== []) {
+        $estadoActividadPermitidos = array_values(array_filter(array_map(static fn ($v): string => trim((string) $v), $rowsEstadoActividad), static fn (string $v): bool => $v !== ''));
+    }
+} catch (Throwable) {
+}
+
+$estadoPedido = in_array($estadoPedido, $estadoPedidoPermitidos, true) ? $estadoPedido : 'PROGRAMADO';
+$estadoAct = in_array($estadoAct, $estadoActividadPermitidos, true) ? $estadoAct : 'PROGRAMADO';
 
 try {
     $sql = 'INSERT INTO Programacion (
