@@ -388,8 +388,8 @@ foreach ($todas as $r) {
                     <span class="text-sm font-black uppercase tracking-tight text-slate-800"><?= htmlspecialchars(mb_strtoupper($titulo)) ?> <span class="text-emerald-600">(<?= $cnt ?>)</span></span>
                 </div>
                 <div class="bg-white rounded-b-[1.5rem] border border-slate-100 border-t-0 overflow-hidden shadow-sm">
-                    <div class="prog-scroll-outer overflow-x-auto overflow-y-auto">
-                        <table class="w-full text-left compact-table prog-table min-w-[2100px] border-separate border-spacing-0">
+                    <div class="prog-scroll-outer overflow-x-hidden overflow-y-auto">
+                        <table class="w-full text-left compact-table prog-table min-w-full table-fixed border-separate border-spacing-0">
                             <thead>
                                 <tr class="text-slate-500 uppercase font-black tracking-tighter border-b border-slate-200 text-[9px]">
                                     <th class="whitespace-nowrap sticky-l1 text-center">Cód.</th>

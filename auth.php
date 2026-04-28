@@ -112,20 +112,19 @@ function mostrarSidebar($activePage = '') {
             </a>
         </div>
     </aside>
-    <button id="sidebarToggleBtn" type="button" class="fixed left-3 top-3 z-[70] w-9 h-9 rounded-lg bg-slate-900 text-white text-sm font-black shadow-lg hover:bg-slate-700 transition-colors" title="Mostrar / ocultar menú">
-        ✕
+    <div id="sidebarHotspot" class="fixed left-0 top-0 h-full w-2 z-[65]" title="Mostrar menú"></div>
+    <button id="sidebarPinBtn" type="button" class="fixed left-3 top-3 z-[70] px-2.5 py-1.5 rounded-full bg-slate-900/85 text-white text-[10px] font-black shadow-lg hover:bg-slate-700 transition-colors backdrop-blur-sm" title="Fijar / auto-ocultar menú">
+        FIJAR
     </button>
     <script>
     (function () {
-        var KEY = 'lm_sidebar_hidden';
+        var KEY_HIDDEN = 'lm_sidebar_hidden';
+        var KEY_PINNED = 'lm_sidebar_pinned';
         function applySidebarState(hidden) {
             var sidebar = document.getElementById('appSidebar');
-            var btn = document.getElementById('sidebarToggleBtn');
-            if (!sidebar || !btn) return;
+            if (!sidebar) return;
 
             sidebar.style.transform = hidden ? 'translateX(-100%)' : 'translateX(0)';
-            btn.textContent = hidden ? '☰' : '✕';
-            btn.title = hidden ? 'Mostrar menú' : 'Ocultar menú';
 
             document.querySelectorAll('body > div.flex-1').forEach(function (el) {
                 el.style.marginLeft = hidden ? '0' : '16rem';
@@ -139,13 +138,41 @@ function mostrarSidebar($activePage = '') {
         }
 
         function initSidebarToggle() {
-            var btn = document.getElementById('sidebarToggleBtn');
-            if (!btn) return;
-            var hidden = localStorage.getItem(KEY) === '1';
+            var pinBtn = document.getElementById('sidebarPinBtn');
+            var sidebar = document.getElementById('appSidebar');
+            var hotspot = document.getElementById('sidebarHotspot');
+            if (!sidebar || !hotspot || !pinBtn) return;
+
+            var pinned = localStorage.getItem(KEY_PINNED) === '1';
+            var hidden = localStorage.getItem(KEY_HIDDEN) === '1';
+            if (!pinned && localStorage.getItem(KEY_HIDDEN) === null) hidden = true;
+
+            function updatePinUi() {
+                pinBtn.textContent = pinned ? 'FIJO' : 'AUTO';
+                pinBtn.title = pinned ? 'Menú fijo' : 'Menú auto-oculto';
+            }
+
+            updatePinUi();
             applySidebarState(hidden);
-            btn.addEventListener('click', function () {
+
+            hotspot.addEventListener('mouseenter', function () {
+                if (pinned) return;
+                hidden = false;
+                applySidebarState(hidden);
+            });
+            sidebar.addEventListener('mouseleave', function () {
+                if (pinned) return;
                 hidden = !hidden;
-                localStorage.setItem(KEY, hidden ? '1' : '0');
+                hidden = true;
+                applySidebarState(hidden);
+            });
+
+            pinBtn.addEventListener('click', function () {
+                pinned = !pinned;
+                if (pinned) hidden = false;
+                localStorage.setItem(KEY_PINNED, pinned ? '1' : '0');
+                localStorage.setItem(KEY_HIDDEN, hidden ? '1' : '0');
+                updatePinUi();
                 applySidebarState(hidden);
             });
         }
