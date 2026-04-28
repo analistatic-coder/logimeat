@@ -352,17 +352,20 @@ foreach ($todas as $r) {
                 </div>
                 <?php if ($puedeSeleccionColumnas): ?>
                 <div class="pt-3 border-t border-slate-100">
-                    <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Columnas visibles (solo Admin/Super Admin)</p>
-                    </div>
-                    <div id="columnasProgramacionWrap" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <button type="button" id="btnAplicarColumnas" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider hover:bg-emerald-700">
-                            Aplicar columnas
-                        </button>
-                        <button type="button" id="btnResetColumnas" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-slate-200">
-                            Restablecer filas
-                        </button>
+                    <button type="button" id="btnToggleColumnas" class="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-slate-100">
+                        <span>Columnas visibles (solo Admin/Super Admin)</span>
+                        <span id="iconToggleColumnas">▾</span>
+                    </button>
+                    <div id="panelColumnas" class="mt-2 hidden">
+                        <div id="columnasProgramacionWrap" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <button type="button" id="btnAplicarColumnas" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider hover:bg-emerald-700">
+                                Aplicar columnas
+                            </button>
+                            <button type="button" id="btnResetColumnas" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-slate-200">
+                                Restablecer filas
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -701,6 +704,16 @@ foreach ($todas as $r) {
                 var tm = document.getElementById('toggleMeta');
                 if (tc) tc.checked = false;
                 if (tm) tm.checked = false;
+                var btnToggle = document.getElementById('btnToggleColumnas');
+                var panelColumnas = document.getElementById('panelColumnas');
+                var iconToggle = document.getElementById('iconToggleColumnas');
+                if (btnToggle && panelColumnas && iconToggle) {
+                    btnToggle.addEventListener('click', function () {
+                        var oculto = panelColumnas.classList.contains('hidden');
+                        panelColumnas.classList.toggle('hidden', !oculto);
+                        iconToggle.textContent = oculto ? '▴' : '▾';
+                    });
+                }
                 var btnAplicar = document.getElementById('btnAplicarColumnas');
                 if (btnAplicar) {
                     btnAplicar.addEventListener('click', function () {
