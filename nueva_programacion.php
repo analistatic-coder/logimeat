@@ -219,30 +219,6 @@ try {
             </section>
 
             <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <h2 class="md:col-span-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">OTIF / calidad</h2>
-                <?php
-                $otifOpts = ['' => '—', 'SI' => 'SI', 'NO' => 'NO'];
-                $otifFields = [
-                    'cantidad_correcta' => 'Cantidad correcta',
-                    'producto_correcto' => 'Producto correcto',
-                    'entrega_tiempo' => 'Entrega a tiempo',
-                    'direccion_correcta' => 'Dirección correcta',
-                    'pedido_perfecto' => 'Pedido perfecto',
-                ];
-foreach ($otifFields as $name => $lab):
-    ?>
-                <div>
-                    <label class="block text-[9px] font-black text-slate-500 uppercase mb-1"><?= htmlspecialchars($lab) ?></label>
-                    <select name="<?= htmlspecialchars($name) ?>" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
-                        <?php foreach ($otifOpts as $val => $disp): ?>
-                            <option value="<?= htmlspecialchars($val) ?>"><?= htmlspecialchars($disp) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <?php endforeach; ?>
-            </section>
-
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <h2 class="md:col-span-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Estado y contacto</h2>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Estado actividad</label>

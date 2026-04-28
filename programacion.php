@@ -512,6 +512,52 @@ foreach ($todas as $r) {
     <script>
         var _progRefinarTimer = null;
         var _columnVisibility = {};
+        var _columnDefaultVisibility = {
+            codigo: false,
+            id_programacion: false,
+            f_registro: true,
+            solicitante: false,
+            medio: false,
+            estado_pedido: false,
+            cliente: true,
+            n_planta: false,
+            planta_nombre: false,
+            planta_op: false,
+            actividad: true,
+            f_operacion: true,
+            hora: true,
+            producto: true,
+            t_cuarteo: true,
+            lote: false,
+            cantidad: true,
+            ciudad: false,
+            destino: true,
+            ubicacion: false,
+            opl: false,
+            conductor: true,
+            vehiculo: true,
+            obs: true,
+            cant_ok: false,
+            prod_ok: false,
+            ent_tiempo: false,
+            dir_ok: false,
+            ped_perf: false,
+            estado_actividad: false,
+            telefono: false
+        };
+        var _columnWidths = {
+            cliente: '16rem',
+            actividad: '10rem',
+            f_operacion: '8rem',
+            hora: '5rem',
+            producto: '9rem',
+            t_cuarteo: '8rem',
+            cantidad: '6rem',
+            destino: '11rem',
+            conductor: '10rem',
+            vehiculo: '8rem',
+            obs: '16rem'
+        };
         var _columnDefs = [
             { i: 1, key: 'codigo', label: 'Cód.' },
             { i: 2, key: 'id_programacion', label: 'ID prog.' },
@@ -589,6 +635,13 @@ foreach ($todas as $r) {
                         var cell = tr.children[def.i - 1];
                         if (!cell) return;
                         cell.classList.toggle('hidden', !visible);
+                        if (visible && _columnWidths[def.key]) {
+                            cell.style.minWidth = _columnWidths[def.key];
+                            cell.style.maxWidth = _columnWidths[def.key];
+                        } else if (visible) {
+                            cell.style.removeProperty('min-width');
+                            cell.style.removeProperty('max-width');
+                        }
                     });
                 });
             });
@@ -600,7 +653,9 @@ foreach ($todas as $r) {
             if (!wrap) return;
             wrap.innerHTML = '';
             _columnDefs.forEach(function (def) {
-                if (_columnVisibility[def.key] === undefined) _columnVisibility[def.key] = true;
+                if (_columnVisibility[def.key] === undefined) {
+                    _columnVisibility[def.key] = _columnDefaultVisibility[def.key] === true;
+                }
                 var id = 'col_' + def.key;
                 var label = document.createElement('label');
                 label.setAttribute('for', id);
@@ -642,6 +697,10 @@ foreach ($todas as $r) {
             }
             if (_esAdminColumnas) {
                 renderColumnManager();
+                var tc = document.getElementById('toggleCalidad');
+                var tm = document.getElementById('toggleMeta');
+                if (tc) tc.checked = false;
+                if (tm) tm.checked = false;
                 var btnAplicar = document.getElementById('btnAplicarColumnas');
                 if (btnAplicar) {
                     btnAplicar.addEventListener('click', function () {
@@ -651,12 +710,12 @@ foreach ($todas as $r) {
                 var btnReset = document.getElementById('btnResetColumnas');
                 if (btnReset) {
                     btnReset.addEventListener('click', function () {
-                        _columnDefs.forEach(function (def) { _columnVisibility[def.key] = true; });
+                        _columnDefs.forEach(function (def) { _columnVisibility[def.key] = _columnDefaultVisibility[def.key] === true; });
                         renderColumnManager();
                         var tc = document.getElementById('toggleCalidad');
                         var tm = document.getElementById('toggleMeta');
-                        if (tc) tc.checked = true;
-                        if (tm) tm.checked = true;
+                        if (tc) tc.checked = false;
+                        if (tm) tm.checked = false;
                         applyProgColumnToggles();
                     });
                 }
