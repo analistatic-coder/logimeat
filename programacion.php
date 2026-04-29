@@ -1,7 +1,7 @@
-<?php
+<?php 
 declare(strict_types=1);
 
-require_once 'auth.php';
+require_once 'auth.php'; 
 require_once 'conexion.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
 
@@ -181,7 +181,7 @@ if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
     $aviso_limite_buscar = $total_registros > 8000;
 }
 
-$sql = "SELECT p.*,
+$sql = "SELECT p.*, 
                c.Cliente AS NomCli,
                COALESCE(pr.Producto, p.Producto) AS NomProdDisplay,
                act.Actividad AS NomAct,
@@ -193,7 +193,7 @@ $sql = "SELECT p.*,
                tc.Tipo_Cuarteo AS NomTipoCuarteo,
                oplm.OPL AS NomOPL,
                cond.Conductor AS NomConductor
-        FROM Programacion p
+        FROM Programacion p 
         $sqlJoins
         $where
         ORDER BY p.id_interno DESC
@@ -279,7 +279,7 @@ foreach ($todas as $r) {
     </style>
 </head>
 <body class="flex min-h-screen text-slate-800">
-
+    
     <?php mostrarSidebar('prog'); ?>
 
     <div class="flex-1 flex flex-col ml-64 min-h-screen w-[calc(100%-16rem)] bg-[#f8fafc]">
@@ -369,7 +369,7 @@ foreach ($todas as $r) {
                     </div>
                 </div>
                 <?php endif; ?>
-            </form>
+                </form>
 
             <?php
             foreach ($ordenGrupo as $gkey):
@@ -386,11 +386,11 @@ foreach ($todas as $r) {
                 <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-t-[1.5rem] border border-slate-100 border-b-0 shadow-sm <?= $borderPlanta ?> border-l-[6px]">
                     <span class="text-2xl leading-none"><?= $iconPlanta ?></span>
                     <span class="text-sm font-black uppercase tracking-tight text-slate-800"><?= htmlspecialchars(mb_strtoupper($titulo)) ?> <span class="text-emerald-600">(<?= $cnt ?>)</span></span>
-                </div>
+            </div>
                 <div class="bg-white rounded-b-[1.5rem] border border-slate-100 border-t-0 overflow-hidden shadow-sm">
                     <div class="prog-scroll-outer overflow-x-hidden overflow-y-auto">
                         <table class="w-full text-left compact-table prog-table min-w-full table-fixed border-separate border-spacing-0">
-                            <thead>
+                        <thead>
                                 <tr class="text-slate-500 uppercase font-black tracking-tighter border-b border-slate-200 text-[9px]">
                                     <th class="whitespace-nowrap sticky-l1 text-center">Cód.</th>
                                     <th class="whitespace-nowrap sticky-l2">ID prog.</th>
@@ -398,7 +398,7 @@ foreach ($todas as $r) {
                                     <th class="min-w-[100px] col-meta">Solicitante</th>
                                     <th class="col-meta">Medio</th>
                                     <th>Estado pedido</th>
-                                    <th class="min-w-[120px]">Cliente</th>
+                                    <th class="min-w-[220px]">Cliente</th>
                                     <th>Nº planta</th>
                                     <th>Planta (nombre)</th>
                                     <th>Planta op.</th>
@@ -415,7 +415,7 @@ foreach ($todas as $r) {
                                     <th>OPL</th>
                                     <th>Conductor</th>
                                     <th>Vehículo</th>
-                                    <th class="min-w-[120px]">Observaciones</th>
+                                    <th class="min-w-[280px]">Observaciones</th>
                                     <th class="col-calidad">Cant. OK</th>
                                     <th class="col-calidad">Prod. OK</th>
                                     <th class="col-calidad">Entr. tiempo</th>
@@ -424,8 +424,8 @@ foreach ($todas as $r) {
                                     <th class="text-center">Estado act.</th>
                                     <th>Teléfono</th>
                                     <th class="text-center sticky-r"></th>
-                                </tr>
-                            </thead>
+                            </tr>
+                        </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <?php foreach ($filasG as $r):
                                     $st = (string) ($r['Estado_Actividad'] ?? '');
@@ -452,14 +452,14 @@ foreach ($todas as $r) {
                                     <td class="max-w-[140px] truncate text-slate-700 col-meta" title="<?= htmlspecialchars((string) ($r['NomSolicitante'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomSolicitante'] ?? '')) ?></td>
                                     <td class="max-w-[90px] truncate col-meta" title="<?= htmlspecialchars((string) ($r['NomMedioCom'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomMedioCom'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Estado'] ?? '')) ?></td>
-                                    <td class="max-w-[160px] truncate font-medium text-slate-800" title="<?= htmlspecialchars((string) ($r['NomCli'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCli'] ?? $r['Cliente'] ?? '')) ?></td>
+                                    <td class="min-w-[220px] max-w-[360px] whitespace-normal break-words font-medium text-slate-800" title="<?= htmlspecialchars((string) ($r['NomCli'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCli'] ?? $r['Cliente'] ?? '')) ?></td>
                                     <td class="text-slate-500"><?= htmlspecialchars((string) ($r['Planta'] !== null && $r['Planta'] !== '' ? (string) $r['Planta'] : '')) ?></td>
                                     <td class="text-slate-600 max-w-[100px] truncate" title="<?= htmlspecialchars((string) ($r['NomPlantaMaestro'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomPlantaMaestro'] ?? '')) ?></td>
                                     <td class="font-black text-[8px] uppercase text-slate-600"><?= htmlspecialchars(programacion_etiqueta_planta_grupo($gFila)) ?></td>
                                     <td>
                                         <span class="mr-1"><?= $ic ?></span>
                                         <span class="<?= $actClass ?> font-black uppercase text-[8px]"><?= htmlspecialchars($nomAct) ?></span>
-                                    </td>
+                                </td>
                                     <td class="font-bold text-slate-900 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Fecha_de_Operacion'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Hora'] ?? '')) ?></td>
                                     <td class="text-slate-800 font-bold uppercase"><?= htmlspecialchars((string) ($r['NomProdDisplay'] ?? '')) ?></td>
@@ -472,23 +472,23 @@ foreach ($todas as $r) {
                                     <td class="max-w-[100px] truncate text-slate-600 text-[8px]" title="<?= htmlspecialchars($oplShow) ?>"><?= htmlspecialchars($oplShow) ?></td>
                                     <td class="max-w-[110px] truncate text-slate-700" title="<?= htmlspecialchars($condShow) ?>"><?= htmlspecialchars($condShow) ?></td>
                                     <td class="font-black text-slate-800 uppercase whitespace-nowrap"><?= htmlspecialchars($vehDisplay !== '' ? $vehDisplay : '—') ?></td>
-                                    <td class="max-w-[180px] truncate text-slate-500 text-[8px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
+                                    <td class="min-w-[280px] max-w-[460px] whitespace-normal break-words text-slate-500 text-[8px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Cantidad_Correcta'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Producto_Correcto'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Entrega_a_Tiempo'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Direccion_Correcta'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Pedido_Perfecto'] ?? '')) ?></td>
-                                    <td class="text-center">
+                                <td class="text-center">
                                         <span class="status-pill <?= $class ?>"><?= htmlspecialchars($st ?: '—') ?></span>
-                                    </td>
+                                </td>
                                     <td class="text-slate-600 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Telefono'] ?? '')) ?></td>
                                     <td class="text-center sticky-r whitespace-nowrap">
                                         <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-blue-600 font-black hover:bg-blue-50" title="Editar">›</a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                     </div>
                 </div>
             </section>
@@ -518,7 +518,7 @@ foreach ($todas as $r) {
         var _columnDefaultVisibility = {
             codigo: false,
             id_programacion: false,
-            f_registro: true,
+            f_registro: false,
             solicitante: false,
             medio: false,
             estado_pedido: false,
@@ -537,7 +537,7 @@ foreach ($todas as $r) {
             destino: true,
             ubicacion: false,
             opl: false,
-            conductor: true,
+            conductor: false,
             vehiculo: true,
             obs: true,
             cant_ok: false,
@@ -549,7 +549,7 @@ foreach ($todas as $r) {
             telefono: false
         };
         var _columnWidths = {
-            cliente: '16rem',
+            cliente: '22rem',
             actividad: '10rem',
             f_operacion: '8rem',
             hora: '5rem',
@@ -559,7 +559,7 @@ foreach ($todas as $r) {
             destino: '11rem',
             conductor: '10rem',
             vehiculo: '8rem',
-            obs: '16rem'
+            obs: '28rem'
         };
         var _columnDefs = [
             { i: 1, key: 'codigo', label: 'Cód.' },
