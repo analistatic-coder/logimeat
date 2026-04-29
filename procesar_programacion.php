@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once 'auth.php';
 require_once 'conexion.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
+require_once __DIR__ . '/config/programacion_opl_logistica.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: nueva_programacion.php');
@@ -127,6 +128,19 @@ if ($conductorNuevo !== '' && lm_es_admin()) {
         }
     } catch (Throwable) {
         // Si falla alta de conductor, conserva el valor elegido y sigue el flujo normal.
+    }
+}
+
+$oplsMaestro = [];
+try {
+    $oplsMaestro = $pdo->query('SELECT ID_OPL, OPL FROM opl ORDER BY OPL ASC')->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable) {
+}
+$relO = programacion_opl_relaciones($pdo, $oplsMaestro);
+if ($relO['usaFiltro'] && trim($opl) !== '' && $conductorNuevo === '') {
+    $bk = $relO['porOpl'][trim($opl)] ?? null;
+    if ($bk !== null && !programacion_opl_permite_conductor_vehiculo($bk, $conductor, $vehiculo)) {
+        die('El conductor o el vehículo no corresponden a la OPL elegida. Elija una combinación permitida o deje ambos vacíos.');
     }
 }
 

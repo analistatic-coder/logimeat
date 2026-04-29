@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once 'auth.php';
 require_once 'conexion.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
+require_once __DIR__ . '/config/programacion_opl_logistica.php';
 
 $idProgGen = programacion_generar_id_programacion();
 $nextInterno = programacion_siguiente_id_interno_preview($pdo);
@@ -83,6 +84,21 @@ try {
     $opls = $pdo->query('SELECT ID_OPL, OPL FROM opl ORDER BY OPL ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable) {
 }
+
+$oplRelacion = programacion_opl_relaciones($pdo, $opls);
+$oplRelJson = json_encode($oplRelacion, JSON_UNESCAPED_UNICODE);
+$conductoresChoicesJson = json_encode(array_map(static function (array $c): array {
+    return [
+        'id' => trim((string) ($c['ID_Conductor'] ?? '')),
+        'nom' => (string) ($c['Conductor'] ?? ''),
+    ];
+}, $conductores), JSON_UNESCAPED_UNICODE);
+$vehiculosChoicesJson = json_encode(array_map(static function (array $v): array {
+    return [
+        'id' => trim((string) ($v['ID_Vehiculo'] ?? '')),
+        'nom' => (string) ($v['Vehiculo'] ?? ''),
+    ];
+}, $vehiculos), JSON_UNESCAPED_UNICODE);
 
 ?>
 <!DOCTYPE html>
@@ -254,7 +270,7 @@ try {
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">OPL / vínculo</label>
-                    <select name="opl" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <select name="opl" id="opl_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Opcional —</option>
                         <?php foreach ($opls as $o): ?>
                             <?php
@@ -270,6 +286,7 @@ try {
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <p id="opl_rel_aviso" class="mt-1 text-[10px] text-slate-500 font-semibold leading-snug"></p>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Conductor</label>
@@ -291,7 +308,7 @@ try {
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Vehículo</label>
-                    <select name="vehiculo" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <select name="vehiculo" id="vehiculo_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">—</option>
                         <?php foreach ($vehiculos as $v): ?>
                             <option value="<?= htmlspecialchars((string) $v['ID_Vehiculo']) ?>"><?= htmlspecialchars((string) $v['Vehiculo']) ?></option>
@@ -344,14 +361,88 @@ try {
         (function () {
             var prodMap = <?= $productosJson ?>;
             var cuMap = <?= $cuarteoJson ?>;
+            var oplRel = <?= $oplRelJson ?>;
+            var conductoresChoices = <?= $conductoresChoicesJson ?>;
+            var vehiculosChoices = <?= $vehiculosChoicesJson ?>;
             var planta = document.getElementById('planta_operativa');
             var prod = document.getElementById('producto_select');
             var tc = document.getElementById('tipo_cuarteo');
             var wrapC = document.getElementById('wrap_cuarteo');
+            var selOpl = document.getElementById('opl_select');
+            var selVeh = document.getElementById('vehiculo_select');
+            var avisoOpl = document.getElementById('opl_rel_aviso');
             var btnNuevoConductor = document.getElementById('btn_nuevo_conductor');
             var wrapNuevoConductor = document.getElementById('wrap_nuevo_conductor');
             var txtNuevoConductor = document.getElementById('conductor_nuevo_texto');
             var selectConductor = document.getElementById('conductor_select');
+            function repoblarSelect(select, items, idsPermitidos, labelVacio) {
+                if (!select) return;
+                var prev = select.value;
+                select.innerHTML = '';
+                var o0 = document.createElement('option');
+                o0.value = '';
+                o0.textContent = labelVacio;
+                select.appendChild(o0);
+                var allow = null;
+                if (idsPermitidos && idsPermitidos.length) {
+                    allow = {};
+                    idsPermitidos.forEach(function (id) { allow[String(id)] = true; });
+                }
+                items.forEach(function (it) {
+                    if (!it || !it.id) return;
+                    if (allow && !allow[String(it.id)]) return;
+                    var o = document.createElement('option');
+                    o.value = it.id;
+                    o.textContent = it.nom || it.id;
+                    select.appendChild(o);
+                });
+                if (prev) {
+                    if (!allow || allow[String(prev)]) {
+                        for (var i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === prev) {
+                                select.value = prev;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            function refreshOplFiltros() {
+                if (!selectConductor || !selVeh) return;
+                if (!oplRel || !oplRel.usaFiltro) {
+                    repoblarSelect(selectConductor, conductoresChoices, null, '—');
+                    repoblarSelect(selVeh, vehiculosChoices, null, '—');
+                    if (avisoOpl) avisoOpl.textContent = '';
+                    return;
+                }
+                var opl = selOpl && selOpl.value ? String(selOpl.value).trim() : '';
+                if (!opl) {
+                    repoblarSelect(selectConductor, conductoresChoices, null, '—');
+                    repoblarSelect(selVeh, vehiculosChoices, null, '—');
+                    if (avisoOpl) avisoOpl.textContent = '';
+                    return;
+                }
+                var bucket = oplRel.porOpl && oplRel.porOpl[opl] ? oplRel.porOpl[opl] : null;
+                if (!bucket) {
+                    repoblarSelect(selectConductor, conductoresChoices, null, '—');
+                    repoblarSelect(selVeh, vehiculosChoices, null, '—');
+                    if (avisoOpl) {
+                        avisoOpl.textContent = 'Esta OPL aún no tiene enlaces registrados; puede elegir cualquier conductor y vehículo.';
+                    }
+                    return;
+                }
+                var cF = (bucket.c && bucket.c.length) ? bucket.c : null;
+                var vF = (bucket.v && bucket.v.length) ? bucket.v : null;
+                repoblarSelect(selectConductor, conductoresChoices, cF, '—');
+                repoblarSelect(selVeh, vehiculosChoices, vF, '—');
+                if (avisoOpl) {
+                    if (cF || vF) {
+                        avisoOpl.textContent = 'Listas filtradas según la OPL seleccionada.';
+                    } else {
+                        avisoOpl.textContent = '';
+                    }
+                }
+            }
             function refillProd() {
                 var k = planta.value;
                 var list = prodMap[k] || [];
@@ -407,6 +498,8 @@ try {
             }
             refillProd();
             refillCuarteo();
+            if (selOpl) selOpl.addEventListener('change', refreshOplFiltros);
+            refreshOplFiltros();
         })();
         </script>
         <?php mostrarFooter(); ?>
