@@ -42,6 +42,7 @@ $lote = trim((string) ($_POST['lote'] ?? ''));
 $ciudadRaw = trim((string) ($_POST['ciudad'] ?? ''));
 $ubicacion = trim((string) ($_POST['ubicacion'] ?? ''));
 $conductor = trim((string) ($_POST['conductor'] ?? ''));
+$conductorNuevo = trim((string) ($_POST['conductor_nuevo'] ?? ''));
 $vehiculo = trim((string) ($_POST['vehiculo'] ?? ''));
 $estadoAct = trim((string) ($_POST['estado_actividad'] ?? 'PROGRAMADO'));
 $cantOk = trim((string) ($_POST['cantidad_correcta'] ?? ''));
@@ -60,11 +61,15 @@ if (!programacion_es_producto_valido($plantaOp, $producto)) {
 }
 
 $tcList = programacion_tipos_cuarteo_por_planta()[$plantaOp] ?? [];
+$requiereCuarteo = mb_strtoupper($producto, 'UTF-8') === 'CANALES';
+if (!$requiereCuarteo) {
+    $tipoCuarteo = '';
+}
 if ($tipoCuarteo !== '' && $tcList !== [] && !in_array($tipoCuarteo, $tcList, true)) {
     die('Tipo de cuarteo no válido para esta planta.');
 }
 
-if ($tcList === []) {
+if ($tcList === [] || !$requiereCuarteo) {
     $tipoCuarteo = '';
 }
 
@@ -105,6 +110,25 @@ try {
 
 $estadoPedido = in_array($estadoPedido, $estadoPedidoPermitidos, true) ? $estadoPedido : 'PROGRAMADO';
 $estadoAct = in_array($estadoAct, $estadoActividadPermitidos, true) ? $estadoAct : 'PROGRAMADO';
+
+if ($conductorNuevo !== '' && lm_es_admin()) {
+    try {
+        $buscarExistente = $pdo->prepare('SELECT ID_Conductor FROM conductor WHERE UPPER(TRIM(Conductor)) = UPPER(TRIM(?)) LIMIT 1');
+        $buscarExistente->execute([$conductorNuevo]);
+        $idExistente = $buscarExistente->fetchColumn();
+        if ($idExistente !== false && $idExistente !== null && trim((string) $idExistente) !== '') {
+            $conductor = trim((string) $idExistente);
+        } else {
+            $max = $pdo->query("SELECT MAX(CAST(ID_Conductor AS UNSIGNED)) FROM conductor WHERE ID_Conductor REGEXP '^[0-9]+$'")->fetchColumn();
+            $nuevoId = ($max !== null && $max !== false && $max !== '') ? (string) ((int) $max + 1) : substr(bin2hex(random_bytes(4)), 0, 8);
+            $insertConductor = $pdo->prepare('INSERT INTO conductor (ID_Conductor, Conductor) VALUES (?, ?)');
+            $insertConductor->execute([$nuevoId, $conductorNuevo]);
+            $conductor = $nuevoId;
+        }
+    } catch (Throwable) {
+        // Si falla alta de conductor, conserva el valor elegido y sigue el flujo normal.
+    }
+}
 
 try {
     $sql = 'INSERT INTO Programacion (

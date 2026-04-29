@@ -7,6 +7,7 @@ require_once __DIR__ . '/config/programacion_catalogos.php';
 
 $idProgGen = programacion_generar_id_programacion();
 $nextInterno = programacion_siguiente_id_interno_preview($pdo);
+$puedeCrearConductor = lm_es_admin();
 
 $clientes = $pdo->query('SELECT ID_Cliente, Cliente FROM Clientes ORDER BY Cliente ASC')->fetchAll(PDO::FETCH_ASSOC);
 $actividades = $pdo->query('SELECT ID_Actividad, Actividad FROM Actividad ORDER BY Actividad ASC')->fetchAll(PDO::FETCH_ASSOC);
@@ -272,12 +273,21 @@ try {
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Conductor</label>
-                    <select name="conductor" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <select name="conductor" id="conductor_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">—</option>
                         <?php foreach ($conductores as $co): ?>
                             <option value="<?= htmlspecialchars((string) $co['ID_Conductor']) ?>"><?= htmlspecialchars((string) $co['Conductor']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <?php if ($puedeCrearConductor): ?>
+                    <button type="button" id="btn_nuevo_conductor" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
+                        + Crear nuevo conductor
+                    </button>
+                    <div id="wrap_nuevo_conductor" class="mt-2 hidden">
+                        <input type="text" id="conductor_nuevo_texto" name="conductor_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Nombre del nuevo conductor">
+                        <p class="mt-1 text-[10px] text-emerald-700 font-semibold">Se guardará en la tabla de conductores y quedará disponible para todos.</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Vehículo</label>
@@ -338,6 +348,10 @@ try {
             var prod = document.getElementById('producto_select');
             var tc = document.getElementById('tipo_cuarteo');
             var wrapC = document.getElementById('wrap_cuarteo');
+            var btnNuevoConductor = document.getElementById('btn_nuevo_conductor');
+            var wrapNuevoConductor = document.getElementById('wrap_nuevo_conductor');
+            var txtNuevoConductor = document.getElementById('conductor_nuevo_texto');
+            var selectConductor = document.getElementById('conductor_select');
             function refillProd() {
                 var k = planta.value;
                 var list = prodMap[k] || [];
@@ -359,9 +373,38 @@ try {
                     o.textContent = x;
                     tc.appendChild(o);
                 });
-                wrapC.style.display = list.length ? 'block' : 'none';
+                var productoActual = (prod.value || '').trim().toUpperCase();
+                var mostrarCuarteo = productoActual === 'CANALES' && list.length > 0;
+                if (!mostrarCuarteo) {
+                    tc.value = '';
+                }
+                wrapC.style.display = mostrarCuarteo ? 'block' : 'none';
             }
             planta.addEventListener('change', function () { refillProd(); refillCuarteo(); });
+            prod.addEventListener('change', refillCuarteo);
+            if (btnNuevoConductor && wrapNuevoConductor && txtNuevoConductor) {
+                btnNuevoConductor.addEventListener('click', function () {
+                    var oculto = wrapNuevoConductor.classList.contains('hidden');
+                    wrapNuevoConductor.classList.toggle('hidden', !oculto);
+                    if (oculto) {
+                        txtNuevoConductor.focus();
+                    } else {
+                        txtNuevoConductor.value = '';
+                    }
+                });
+                if (selectConductor) {
+                    selectConductor.addEventListener('change', function () {
+                        if (selectConductor.value !== '') {
+                            txtNuevoConductor.value = '';
+                        }
+                    });
+                }
+                txtNuevoConductor.addEventListener('input', function () {
+                    if (txtNuevoConductor.value.trim() !== '' && selectConductor) {
+                        selectConductor.value = '';
+                    }
+                });
+            }
             refillProd();
             refillCuarteo();
         })();
