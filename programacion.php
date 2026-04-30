@@ -102,10 +102,6 @@ $sqlJoins = '
 
 $params = [];
 $where = 'WHERE 1=1';
-// Vista por defecto: mostrar solo programación del día siguiente para evitar listados largos.
-if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
-    $where .= " AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
-}
 if ($desde !== '' && $hasta !== '') {
     $where .= " AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') BETWEEN ? AND ?";
     $params[] = $desde;
@@ -254,22 +250,59 @@ foreach ($todas as $r) {
 $modoPorDefecto = ($buscar === '' && !($desde !== '' && $hasta !== ''));
 if ($modoPorDefecto) {
     $fechaManana = date('d/m/Y', strtotime('+1 day'));
+    $condGrupoSql = [
+        'BENEFICIO' => "(p.Planta_Operativa = 'BENEFICIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '1'))",
+        'DESPOSTE' => "(p.Planta_Operativa = 'DESPOSTE' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '2'))",
+        'CELFRIO' => "(p.Planta_Operativa = 'CELFRIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '3'))",
+    ];
     foreach ($ordenGrupo as $k) {
         $filasGrupo = $grupos[$k] ?? [];
-        if ($filasGrupo === []) {
+        if ($filasGrupo !== []) {
+            $deManana = [];
+            foreach ($filasGrupo as $fila) {
+                if (trim((string) ($fila['Fecha_de_Operacion'] ?? '')) === $fechaManana) {
+                    $deManana[] = $fila;
+                }
+            }
+            if ($deManana !== []) {
+                $grupos[$k] = $deManana;
+            } else {
+                // Ya vienen ordenadas por recencia en el SQL; primera fila = más reciente.
+                $grupos[$k] = [reset($filasGrupo)];
+            }
             continue;
         }
-        $deManana = [];
-        foreach ($filasGrupo as $fila) {
-            if (trim((string) ($fila['Fecha_de_Operacion'] ?? '')) === $fechaManana) {
-                $deManana[] = $fila;
-            }
+        if (!isset($condGrupoSql[$k])) {
+            continue;
         }
-        if ($deManana !== []) {
-            $grupos[$k] = $deManana;
-        } else {
-            // Ya vienen ordenadas por recencia en el SQL; primera fila = más reciente.
-            $grupos[$k] = [reset($filasGrupo)];
+        // Respaldo: si no quedó ninguna fila cargada para el grupo, busca su última programación.
+        $sqlUltimaGrupo = "SELECT p.*,
+                   c.Cliente AS NomCli,
+                   COALESCE(pr.Producto, p.Producto) AS NomProdDisplay,
+                   act.Actividad AS NomAct,
+                   vh.Vehiculo AS PlacaVeh,
+                   plm.Planta AS NomPlantaMaestro,
+                   COALESCE(sol.Solicitante, p.Solicitante) AS NomSolicitante,
+                   mdc.Medio_de_Comunicacion AS NomMedioCom,
+                   mun.Municipio AS NomCiudad,
+                   tc.Tipo_Cuarteo AS NomTipoCuarteo,
+                   oplm.OPL AS NomOPL,
+                   cond.Conductor AS NomConductor
+            FROM Programacion p
+            $sqlJoins
+            WHERE {$condGrupoSql[$k]}
+            ORDER BY
+                STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Registro), ''), '%d/%m/%Y %H:%i:%s') DESC,
+                STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') DESC,
+                p.id_interno DESC
+            LIMIT 1";
+        try {
+            $stUlt = $pdo->query($sqlUltimaGrupo);
+            $rowUlt = $stUlt ? $stUlt->fetch(PDO::FETCH_ASSOC) : false;
+            if (is_array($rowUlt) && $rowUlt !== []) {
+                $grupos[$k] = [$rowUlt];
+            }
+        } catch (Throwable) {
         }
     }
 }
