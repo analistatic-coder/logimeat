@@ -102,6 +102,22 @@ $sqlJoins = '
 
 $params = [];
 $where = 'WHERE 1=1';
+// Vista por defecto:
+// - Mostrar programación del día siguiente.
+// - Si no existe programación para mañana, mostrar la de hoy para evitar vistas vacías.
+if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
+    $where .= " AND (
+        STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+        OR (
+            (
+                SELECT COUNT(*)
+                FROM Programacion p2
+                WHERE STR_TO_DATE(NULLIF(TRIM(p2.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            ) = 0
+            AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = CURDATE()
+        )
+    )";
+}
 if ($desde !== '' && $hasta !== '') {
     $where .= " AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') BETWEEN ? AND ?";
     $params[] = $desde;
@@ -168,14 +184,11 @@ if ($buscar !== '') {
 $limitSql = '';
 $aviso_limite_default = false;
 $aviso_limite_buscar = false;
-// Optimización: en la vista inicial (sin filtros) evita COUNT con JOINs.
-// Ese conteo era el principal costo al entrar a Programación.
 if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
-    try {
-        $total_registros = (int) $pdo->query('SELECT COUNT(*) FROM Programacion')->fetchColumn();
-    } catch (Throwable) {
-        $total_registros = 0;
-    }
+    $sqlCount = 'SELECT COUNT(DISTINCT p.id_interno) FROM Programacion p' . $sqlJoins . ' ' . $where;
+    $stc = $pdo->prepare($sqlCount);
+    $stc->execute($params);
+    $total_registros = (int) $stc->fetchColumn();
 } else {
     $sqlCount = 'SELECT COUNT(DISTINCT p.id_interno) FROM Programacion p' . $sqlJoins . ' ' . $where;
     $stc = $pdo->prepare($sqlCount);
