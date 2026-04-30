@@ -30,6 +30,42 @@ function programacion_resolver_nombre_tabla(PDO $pdo, string $nombreLogico): ?st
 }
 
 /**
+ * Construye mapa de alias normalizados -> ID maestro.
+ *
+ * @return array<string, string>
+ */
+function programacion_mapa_alias_a_id(PDO $pdo, string $tabla, string $colId, string $colNombre): array
+{
+    $map = [];
+    $t = programacion_resolver_nombre_tabla($pdo, $tabla);
+    if ($t === null) {
+        return $map;
+    }
+    try {
+        $sql = 'SELECT `' . str_replace('`', '``', $colId) . '` AS idv, `' . str_replace('`', '``', $colNombre) . '` AS nomv FROM `' . str_replace('`', '``', $t) . '`';
+        $st = $pdo->query($sql);
+        if (!$st) {
+            return $map;
+        }
+        while ($r = $st->fetch(PDO::FETCH_ASSOC)) {
+            $id = trim((string) ($r['idv'] ?? ''));
+            if ($id === '') {
+                continue;
+            }
+            $nom = trim((string) ($r['nomv'] ?? ''));
+            $map[mb_strtoupper($id, 'UTF-8')] = $id;
+            if ($nom !== '') {
+                $map[mb_strtoupper($nom, 'UTF-8')] = $id;
+            }
+        }
+    } catch (Throwable) {
+        return [];
+    }
+
+    return $map;
+}
+
+/**
  * Relación OPL ↔ conductor ↔ vehículo para nueva programación.
  * Intenta varias formas habituales en el esquema legado (tabla puente `logisticos`,
  * columnas en `opl`, o histórico en `Programacion`).
@@ -44,6 +80,8 @@ function programacion_opl_relaciones(PDO $pdo, array $oplsMaestro): array
 {
     $porOpl = [];
     $fuente = null;
+    $mapConductor = programacion_mapa_alias_a_id($pdo, 'conductor', 'ID_Conductor', 'Conductor');
+    $mapVehiculo = programacion_mapa_alias_a_id($pdo, 'vehiculo', 'ID_Vehiculo', 'Vehiculo');
 
     $columnas = static function (PDO $pdo, string $tabla): array {
         try {
@@ -70,48 +108,22 @@ function programacion_opl_relaciones(PDO $pdo, array $oplsMaestro): array
         return null;
     };
 
-    $resolverConductor = static function (PDO $pdo, string $raw): ?string {
-        $raw = trim($raw);
-        if ($raw === '') {
+    $resolverConductor = static function (string $raw) use ($mapConductor): ?string {
+        $key = mb_strtoupper(trim($raw), 'UTF-8');
+        if ($key === '') {
             return null;
         }
-        try {
-            $st = $pdo->prepare(
-                'SELECT ID_Conductor FROM conductor
-                 WHERE CAST(ID_Conductor AS CHAR) = ? OR TRIM(CAST(ID_Conductor AS CHAR)) = ?
-                    OR TRIM(Conductor) = ? LIMIT 1'
-            );
-            $st->execute([$raw, $raw, $raw]);
-            $id = $st->fetchColumn();
-            if ($id !== false && $id !== null && trim((string) $id) !== '') {
-                return trim((string) $id);
-            }
-        } catch (Throwable) {
-        }
 
-        return null;
+        return $mapConductor[$key] ?? null;
     };
 
-    $resolverVehiculo = static function (PDO $pdo, string $raw): ?string {
-        $raw = trim($raw);
-        if ($raw === '') {
+    $resolverVehiculo = static function (string $raw) use ($mapVehiculo): ?string {
+        $key = mb_strtoupper(trim($raw), 'UTF-8');
+        if ($key === '') {
             return null;
         }
-        try {
-            $st = $pdo->prepare(
-                'SELECT ID_Vehiculo FROM vehiculo
-                 WHERE CAST(ID_Vehiculo AS CHAR) = ? OR TRIM(CAST(ID_Vehiculo AS CHAR)) = ?
-                    OR TRIM(Vehiculo) = ? LIMIT 1'
-            );
-            $st->execute([$raw, $raw, $raw]);
-            $id = $st->fetchColumn();
-            if ($id !== false && $id !== null && trim((string) $id) !== '') {
-                return trim((string) $id);
-            }
-        } catch (Throwable) {
-        }
 
-        return null;
+        return $mapVehiculo[$key] ?? null;
     };
 
     $acumular = static function (array &$por, string $oplRaw, ?string $cid, ?string $vid): void {
@@ -148,8 +160,8 @@ function programacion_opl_relaciones(PDO $pdo, array $oplsMaestro): array
                             $oplRaw = trim((string) ($row[$cOpl] ?? ''));
                             $rawC = $cCond !== null ? trim((string) ($row[$cCond] ?? '')) : '';
                             $rawV = $cVeh !== null ? trim((string) ($row[$cVeh] ?? '')) : '';
-                            $cid = $rawC !== '' ? $resolverConductor($pdo, $rawC) : null;
-                            $vid = $rawV !== '' ? $resolverVehiculo($pdo, $rawV) : null;
+                            $cid = $rawC !== '' ? $resolverConductor($rawC) : null;
+                            $vid = $rawV !== '' ? $resolverVehiculo($rawV) : null;
                             $acumular($porOpl, $oplRaw, $cid, $vid);
                         }
                         if ($porOpl !== []) {
@@ -179,8 +191,8 @@ function programacion_opl_relaciones(PDO $pdo, array $oplsMaestro): array
                         $oplRaw = trim((string) ($row[$cOpl] ?? ''));
                         $rawC = $cCond !== null ? trim((string) ($row[$cCond] ?? '')) : '';
                         $rawV = $cVeh !== null ? trim((string) ($row[$cVeh] ?? '')) : '';
-                        $cid = $rawC !== '' ? $resolverConductor($pdo, $rawC) : null;
-                        $vid = $rawV !== '' ? $resolverVehiculo($pdo, $rawV) : null;
+                        $cid = $rawC !== '' ? $resolverConductor($rawC) : null;
+                        $vid = $rawV !== '' ? $resolverVehiculo($rawV) : null;
                         $acumular($porOpl, $oplRaw, $cid, $vid);
                     }
                     if ($porOpl !== []) {
@@ -212,8 +224,8 @@ function programacion_opl_relaciones(PDO $pdo, array $oplsMaestro): array
                     $oplRaw = trim((string) ($row['opl_k'] ?? ''));
                     $rawC = trim((string) ($row['c_raw'] ?? ''));
                     $rawV = trim((string) ($row['v_raw'] ?? ''));
-                    $cid = $rawC !== '' ? $resolverConductor($pdo, $rawC) : null;
-                    $vid = $rawV !== '' ? $resolverVehiculo($pdo, $rawV) : null;
+                    $cid = $rawC !== '' ? $resolverConductor($rawC) : null;
+                    $vid = $rawV !== '' ? $resolverVehiculo($rawV) : null;
                     $acumular($porOpl, $oplRaw, $cid, $vid);
                 }
                 if ($porOpl !== []) {

@@ -85,7 +85,26 @@ try {
 } catch (Throwable) {
 }
 
-$oplRelacion = programacion_opl_relaciones($pdo, $opls);
+$oplRelacion = null;
+$cacheKey = 'lm_opl_rel_cache_v1';
+$cacheTtl = 90;
+$cacheSig = md5(json_encode(array_map(static fn (array $o): string => (string) ($o['ID_OPL'] ?? ''), $opls), JSON_UNESCAPED_UNICODE) ?: 'none');
+if (isset($_SESSION[$cacheKey]) && is_array($_SESSION[$cacheKey])) {
+    $cache = $_SESSION[$cacheKey];
+    $cacheAt = (int) ($cache['at'] ?? 0);
+    $cacheSigSaved = (string) ($cache['sig'] ?? '');
+    if ($cacheSigSaved === $cacheSig && (time() - $cacheAt) <= $cacheTtl && isset($cache['data']) && is_array($cache['data'])) {
+        $oplRelacion = $cache['data'];
+    }
+}
+if ($oplRelacion === null) {
+    $oplRelacion = programacion_opl_relaciones($pdo, $opls);
+    $_SESSION[$cacheKey] = [
+        'at' => time(),
+        'sig' => $cacheSig,
+        'data' => $oplRelacion,
+    ];
+}
 $oplRelJson = json_encode($oplRelacion, JSON_UNESCAPED_UNICODE);
 $conductoresChoicesJson = json_encode(array_map(static function (array $c): array {
     return [
