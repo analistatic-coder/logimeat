@@ -165,14 +165,24 @@ if ($buscar !== '') {
     $params = array_merge($params, $buscarParams);
 }
 
-$sqlCount = 'SELECT COUNT(DISTINCT p.id_interno) FROM Programacion p' . $sqlJoins . ' ' . $where;
-$stc = $pdo->prepare($sqlCount);
-$stc->execute($params);
-$total_registros = (int) $stc->fetchColumn();
-
 $limitSql = '';
 $aviso_limite_default = false;
 $aviso_limite_buscar = false;
+// Optimización: en la vista inicial (sin filtros) evita COUNT con JOINs.
+// Ese conteo era el principal costo al entrar a Programación.
+if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
+    try {
+        $total_registros = (int) $pdo->query('SELECT COUNT(*) FROM Programacion')->fetchColumn();
+    } catch (Throwable) {
+        $total_registros = 0;
+    }
+} else {
+    $sqlCount = 'SELECT COUNT(DISTINCT p.id_interno) FROM Programacion p' . $sqlJoins . ' ' . $where;
+    $stc = $pdo->prepare($sqlCount);
+    $stc->execute($params);
+    $total_registros = (int) $stc->fetchColumn();
+}
+
 if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
     $limitSql = ' LIMIT 2000';
     $aviso_limite_default = $total_registros > 2000;
@@ -196,7 +206,18 @@ $sql = "SELECT p.*,
         FROM Programacion p 
         $sqlJoins
         $where
-        ORDER BY p.id_interno DESC
+        ORDER BY
+            CASE
+                WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY) THEN 0
+                ELSE 1
+            END ASC,
+            STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') ASC,
+            CASE
+                WHEN NULLIF(TRIM(p.Hora), '') IS NULL THEN 1
+                ELSE 0
+            END ASC,
+            STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i') ASC,
+            p.id_interno DESC
         $limitSql";
 
 $st = $pdo->prepare($sql);
@@ -406,16 +427,16 @@ foreach ($todas as $r) {
                                     <th class="whitespace-nowrap">F. operación</th>
                                     <th>Hora</th>
                                     <th class="min-w-[90px]">Producto</th>
-                                    <th>T. cuarteo</th>
-                                    <th>Lote</th>
-                                    <th class="text-right">Cantidad</th>
+                                    <th class="min-w-[72px]">T. cuarteo</th>
+                                    <th class="min-w-[54px]">Lote</th>
+                                    <th class="text-right min-w-[68px]">Cantidad</th>
                                     <th>Ciudad</th>
                                     <th>Destino</th>
                                     <th>Ubicación</th>
                                     <th>OPL</th>
                                     <th>Conductor</th>
                                     <th>Vehículo</th>
-                                    <th class="min-w-[280px]">Observaciones</th>
+                                    <th class="min-w-[360px]">Observaciones</th>
                                     <th class="col-calidad">Cant. OK</th>
                                     <th class="col-calidad">Prod. OK</th>
                                     <th class="col-calidad">Entr. tiempo</th>
@@ -463,16 +484,16 @@ foreach ($todas as $r) {
                                     <td class="font-bold text-slate-900 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Fecha_de_Operacion'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Hora'] ?? '')) ?></td>
                                     <td class="text-slate-800 font-bold uppercase"><?= htmlspecialchars((string) ($r['NomProdDisplay'] ?? '')) ?></td>
-                                    <td class="text-slate-600 max-w-[100px] truncate" title="<?= htmlspecialchars($tcShow) ?>"><?= htmlspecialchars($tcShow) ?></td>
-                                    <td class="text-slate-600 max-w-[100px] truncate" title="<?= htmlspecialchars((string) ($r['Lote'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Lote'] ?? '')) ?></td>
-                                    <td class="text-right font-bold text-blue-700"><?= $r['Cantidad'] !== null && $r['Cantidad'] !== '' ? number_format((float) $r['Cantidad'], 2) : '' ?></td>
+                                    <td class="min-w-[72px] max-w-[90px] truncate text-slate-600" title="<?= htmlspecialchars($tcShow) ?>"><?= htmlspecialchars($tcShow) ?></td>
+                                    <td class="min-w-[54px] max-w-[70px] truncate text-slate-600 text-center" title="<?= htmlspecialchars((string) ($r['Lote'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Lote'] ?? '—')) ?></td>
+                                    <td class="min-w-[68px] text-right font-bold text-blue-700"><?= $r['Cantidad'] !== null && $r['Cantidad'] !== '' ? number_format((float) $r['Cantidad'], 2) : '' ?></td>
                                     <td class="max-w-[100px] truncate text-slate-600" title="<?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?></td>
                                     <td class="max-w-[140px] truncate text-slate-700" title="<?= htmlspecialchars((string) ($r['Destino'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Destino'] ?? '')) ?></td>
                                     <td class="max-w-[100px] truncate text-slate-600" title="<?= htmlspecialchars((string) ($r['Ubicacion'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Ubicacion'] ?? '')) ?></td>
                                     <td class="max-w-[100px] truncate text-slate-600 text-[8px]" title="<?= htmlspecialchars($oplShow) ?>"><?= htmlspecialchars($oplShow) ?></td>
                                     <td class="max-w-[110px] truncate text-slate-700" title="<?= htmlspecialchars($condShow) ?>"><?= htmlspecialchars($condShow) ?></td>
                                     <td class="font-black text-slate-800 uppercase whitespace-nowrap"><?= htmlspecialchars($vehDisplay !== '' ? $vehDisplay : '—') ?></td>
-                                    <td class="min-w-[280px] max-w-[460px] whitespace-normal break-words text-slate-500 text-[8px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
+                                    <td class="min-w-[360px] max-w-[560px] whitespace-normal break-words text-slate-500 text-[8px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Cantidad_Correcta'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Producto_Correcto'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Entrega_a_Tiempo'] ?? '')) ?></td>
@@ -554,12 +575,13 @@ foreach ($todas as $r) {
             f_operacion: '8rem',
             hora: '5rem',
             producto: '9rem',
-            t_cuarteo: '8rem',
-            cantidad: '6rem',
+            t_cuarteo: '5.5rem',
+            lote: '4.25rem',
+            cantidad: '5rem',
             destino: '11rem',
             conductor: '10rem',
             vehiculo: '8rem',
-            obs: '28rem'
+            obs: '36rem'
         };
         var _columnDefs = [
             { i: 1, key: 'codigo', label: 'Cód.' },
