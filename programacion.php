@@ -211,12 +211,17 @@ $sql = "SELECT p.*,
                 WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY) THEN 0
                 ELSE 1
             END ASC,
-            STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') ASC,
             CASE
-                WHEN NULLIF(TRIM(p.Hora), '') IS NULL THEN 1
+                WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                     AND NULLIF(TRIM(p.Hora), '') IS NULL THEN 1
+                WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY) THEN 0
                 ELSE 0
             END ASC,
-            STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i') ASC,
+            CASE
+                WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    THEN STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i')
+                ELSE NULL
+            END ASC,
             p.id_interno DESC
         $limitSql";
 
