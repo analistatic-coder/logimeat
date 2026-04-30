@@ -102,21 +102,9 @@ $sqlJoins = '
 
 $params = [];
 $where = 'WHERE 1=1';
-// Vista por defecto:
-// - Mostrar programación del día siguiente.
-// - Si no existe programación para mañana, mostrar la de hoy para evitar vistas vacías.
+// Vista por defecto: mostrar solo programación del día siguiente para evitar listados largos.
 if ($buscar === '' && !($desde !== '' && $hasta !== '')) {
-    $where .= " AND (
-        STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-        OR (
-            (
-                SELECT COUNT(*)
-                FROM Programacion p2
-                WHERE STR_TO_DATE(NULLIF(TRIM(p2.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-            ) = 0
-            AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = CURDATE()
-        )
-    )";
+    $where .= " AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
 }
 if ($desde !== '' && $hasta !== '') {
     $where .= " AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') BETWEEN ? AND ?";
@@ -259,6 +247,31 @@ foreach ($ordenGrupo as $k) {
 foreach ($todas as $r) {
     $g = programacion_grupo_desde_fila($r);
     $grupos[$g][] = $r;
+}
+
+// En vista por defecto (sin filtros/buscar): por cada grupo mostrar
+// 1) solo registros de mañana; 2) si no hay, dejar solo el más reciente del grupo.
+$modoPorDefecto = ($buscar === '' && !($desde !== '' && $hasta !== ''));
+if ($modoPorDefecto) {
+    $fechaManana = date('d/m/Y', strtotime('+1 day'));
+    foreach ($ordenGrupo as $k) {
+        $filasGrupo = $grupos[$k] ?? [];
+        if ($filasGrupo === []) {
+            continue;
+        }
+        $deManana = [];
+        foreach ($filasGrupo as $fila) {
+            if (trim((string) ($fila['Fecha_de_Operacion'] ?? '')) === $fechaManana) {
+                $deManana[] = $fila;
+            }
+        }
+        if ($deManana !== []) {
+            $grupos[$k] = $deManana;
+        } else {
+            // Ya vienen ordenadas por recencia en el SQL; primera fila = más reciente.
+            $grupos[$k] = [reset($filasGrupo)];
+        }
+    }
 }
 
 ?>
