@@ -222,6 +222,14 @@ $sql = "SELECT p.*,
                     THEN STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i')
                 ELSE NULL
             END ASC,
+            CASE
+                WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY) THEN NULL
+                ELSE STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Registro), ''), '%d/%m/%Y %H:%i:%s')
+            END DESC,
+            CASE
+                WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY) THEN NULL
+                ELSE STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y')
+            END DESC,
             p.id_interno DESC
         $limitSql";
 
