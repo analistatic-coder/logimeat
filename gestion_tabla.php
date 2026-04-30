@@ -1,6 +1,7 @@
 <?php
 require_once 'auth.php';
 require_once 'conexion.php';
+require_once __DIR__ . '/config/logisticos_vinculo_maestro.php';
 
 // 1. SEGURIDAD Y PARÁMETROS DE RUTA
 $es_admin = lm_es_admin();
@@ -114,9 +115,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
             $datos_post = $_POST;
             $id_interno_referencia = $datos_post['id_interno_hidden'] ?? '';
             $action = $datos_post['action'];
+            $vincConductor = trim((string) ($datos_post['vinculo_conductor'] ?? ''));
+            $vincVehiculo = trim((string) ($datos_post['vinculo_vehiculo'] ?? ''));
             
             // Limpiamos datos que no van directo a columnas
-            unset($datos_post['action'], $datos_post['id_interno_hidden'], $datos_post['id_interno']);
+            unset(
+                $datos_post['action'],
+                $datos_post['id_interno_hidden'],
+                $datos_post['id_interno'],
+                $datos_post['vinculo_conductor'],
+                $datos_post['vinculo_vehiculo']
+            );
             
             if ($action == 'crear') {
                 $asignar_id_auto = !($empleado_cedula_como_pk);
@@ -138,6 +147,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                 $sql = "INSERT INTO `$tabla_get` (" . implode(',', $columnas_sql) . ") VALUES ($placeholders)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute(array_values($datos_post));
+                if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
+                    $idOplNuevo = trim((string) ($datos_post[$columna_id_maestro] ?? ''));
+                    if ($idOplNuevo !== '' && $vincConductor !== '' && $vincVehiculo !== '') {
+                        logisticos_maestro_insertar_triple($pdo, $idOplNuevo, $vincConductor, $vincVehiculo);
+                    }
+                }
             } else {
                 if ($columna_pk && isset($datos_post[$columna_pk])) {
                     unset($datos_post[$columna_pk]);
@@ -167,6 +182,17 @@ if ($es_tabla_empleado && $columna_pk === 'ID_Empleado') {
 $stmt = $pdo->query("SELECT * FROM `$tabla_get` ORDER BY $ordenListado");
 $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columnas_info, 'Field');
+$opcionesRelacionOpl = ['conductores' => [], 'vehiculos' => []];
+if ($es_admin && strtolower($tabla_get) === 'opl') {
+    try {
+        $opcionesRelacionOpl['conductores'] = $pdo->query('SELECT ID_Conductor, Conductor FROM conductor ORDER BY Conductor ASC')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (Throwable) {
+    }
+    try {
+        $opcionesRelacionOpl['vehiculos'] = $pdo->query('SELECT ID_Vehiculo, Vehiculo FROM vehiculo ORDER BY Vehiculo ASC')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (Throwable) {
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -285,9 +311,57 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
         const columnaPk = <?= json_encode($columna_pk) ?>;
         const empleadoCedulaComoPk = <?= $empleado_cedula_como_pk ? 'true' : 'false' ?>;
         const esTablaUser = <?= $es_tabla_user ? 'true' : 'false' ?>;
+        const esTablaOpl = <?= strtolower($tabla_get) === 'opl' ? 'true' : 'false' ?>;
+        const opcionesRelacionOpl = <?= json_encode($opcionesRelacionOpl, JSON_UNESCAPED_UNICODE) ?>;
         const rolesDisponibles = ['Super Admin', 'Administrador', 'Operativo'];
         const estadosDisponibles = ['ACTIVO', 'INACTIVO'];
         const accionesDisponibles = ['TODAS', 'CONSULTAR', 'CREAR', 'EDITAR', 'ELIMINAR'];
+
+        function agregarRelacionOplEnCrear() {
+            if (!esTablaOpl) return;
+            const contenedor = document.getElementById('camposDinamicos');
+            if (!contenedor) return;
+
+            const card = document.createElement('div');
+            card.className = 'mt-5 p-4 rounded-2xl border border-emerald-100 bg-emerald-50/50';
+
+            const titulo = document.createElement('p');
+            titulo.className = 'text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-2';
+            titulo.textContent = 'Relación OPL';
+            card.appendChild(titulo);
+
+            const hint = document.createElement('p');
+            hint.className = 'text-[10px] font-semibold text-emerald-700 mb-3';
+            hint.textContent = 'Opcional: seleccione conductor y vehículo para guardarlos relacionados con esta OPL.';
+            card.appendChild(hint);
+
+            const mkSelect = function (name, labelText, rows, idKey, txtKey) {
+                const label = document.createElement('label');
+                label.className = 'block text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 tracking-widest';
+                label.textContent = labelText;
+                const sel = document.createElement('select');
+                sel.name = name;
+                sel.className = 'w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all bg-white mb-3';
+                const first = document.createElement('option');
+                first.value = '';
+                first.textContent = '— Opcional —';
+                sel.appendChild(first);
+                (rows || []).forEach(function (r) {
+                    const id = String(r[idKey] ?? '').trim();
+                    if (!id) return;
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = String(r[txtKey] ?? id);
+                    sel.appendChild(opt);
+                });
+                card.appendChild(label);
+                card.appendChild(sel);
+            };
+
+            mkSelect('vinculo_conductor', 'Conductor', opcionesRelacionOpl.conductores, 'ID_Conductor', 'Conductor');
+            mkSelect('vinculo_vehiculo', 'Vehículo', opcionesRelacionOpl.vehiculos, 'ID_Vehiculo', 'Vehiculo');
+            contenedor.appendChild(card);
+        }
 
         function abrirModalCrear() {
             document.getElementById('modalTitulo').innerText = "Nuevo Registro";
@@ -304,6 +378,7 @@ $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columna
             }
             
             renderizarCampos(datosLimpios, false);
+            agregarRelacionOplEnCrear();
             mostrarModal();
         }
 
