@@ -267,15 +267,27 @@ if ($modoPorDefecto) {
             if ($deManana !== []) {
                 $grupos[$k] = $deManana;
             } else {
-                // Ya vienen ordenadas por recencia en el SQL; primera fila = más reciente.
-                $grupos[$k] = [reset($filasGrupo)];
+                // Si no hay de mañana, mostrar TODAS las de la última fecha disponible del grupo.
+                $fechaUltima = trim((string) (reset($filasGrupo)['Fecha_de_Operacion'] ?? ''));
+                if ($fechaUltima === '') {
+                    $grupos[$k] = [reset($filasGrupo)];
+                } else {
+                    $ultimasDelDia = [];
+                    foreach ($filasGrupo as $fila) {
+                        if (trim((string) ($fila['Fecha_de_Operacion'] ?? '')) === $fechaUltima) {
+                            $ultimasDelDia[] = $fila;
+                        }
+                    }
+                    $grupos[$k] = $ultimasDelDia !== [] ? $ultimasDelDia : [reset($filasGrupo)];
+                }
             }
             continue;
         }
         if (!isset($condGrupoSql[$k])) {
             continue;
         }
-        // Respaldo: si no quedó ninguna fila cargada para el grupo, busca su última programación.
+        $condGrupoPx = str_replace('p.', 'px.', $condGrupoSql[$k]);
+        // Respaldo: si no quedó ninguna fila cargada para el grupo, traer TODAS las filas de su última fecha.
         $sqlUltimaGrupo = "SELECT p.*,
                    c.Cliente AS NomCli,
                    COALESCE(pr.Producto, p.Producto) AS NomProdDisplay,
@@ -291,16 +303,21 @@ if ($modoPorDefecto) {
             FROM Programacion p
             $sqlJoins
             WHERE {$condGrupoSql[$k]}
+              AND STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = (
+                SELECT MAX(STR_TO_DATE(NULLIF(TRIM(px.Fecha_de_Operacion), ''), '%d/%m/%Y'))
+                FROM Programacion px
+                WHERE {$condGrupoPx}
+              )
             ORDER BY
+                CASE WHEN NULLIF(TRIM(p.Hora), '') IS NULL THEN 1 ELSE 0 END ASC,
+                STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i') ASC,
                 STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Registro), ''), '%d/%m/%Y %H:%i:%s') DESC,
-                STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') DESC,
-                p.id_interno DESC
-            LIMIT 1";
+                p.id_interno DESC";
         try {
             $stUlt = $pdo->query($sqlUltimaGrupo);
-            $rowUlt = $stUlt ? $stUlt->fetch(PDO::FETCH_ASSOC) : false;
-            if (is_array($rowUlt) && $rowUlt !== []) {
-                $grupos[$k] = [$rowUlt];
+            $rowsUlt = $stUlt ? $stUlt->fetchAll(PDO::FETCH_ASSOC) : [];
+            if (is_array($rowsUlt) && $rowsUlt !== []) {
+                $grupos[$k] = $rowsUlt;
             }
         } catch (Throwable) {
         }
