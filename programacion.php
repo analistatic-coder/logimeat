@@ -216,7 +216,10 @@ $sql = "SELECT p.*,
             END ASC,
             CASE
                 WHEN STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Operacion), ''), '%d/%m/%Y') = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-                    THEN STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i')
+                    THEN COALESCE(
+                        STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i:%s'),
+                        STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i')
+                    )
                 ELSE NULL
             END ASC,
             CASE
@@ -235,7 +238,7 @@ $st->execute($params);
 $todas = $st->fetchAll(PDO::FETCH_ASSOC);
 $filas_cargadas = count($todas);
 
-$ordenGrupo = ['BENEFICIO', 'DESPOSTE', 'CELFRIO', '_SIN'];
+$ordenGrupo = ['BENEFICIO', 'DESPOSTE', 'CELFRIO', 'SUBPRODUCTOS', '_SIN'];
 $grupos = [];
 foreach ($ordenGrupo as $k) {
     $grupos[$k] = [];
@@ -254,6 +257,7 @@ if ($modoPorDefecto) {
         'BENEFICIO' => "(p.Planta_Operativa = 'BENEFICIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '1'))",
         'DESPOSTE' => "(p.Planta_Operativa = 'DESPOSTE' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '2'))",
         'CELFRIO' => "(p.Planta_Operativa = 'CELFRIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '3'))",
+        'SUBPRODUCTOS' => "(p.Planta_Operativa = 'SUBPRODUCTOS' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '4'))",
     ];
     foreach ($ordenGrupo as $k) {
         $filasGrupo = $grupos[$k] ?? [];
@@ -310,7 +314,10 @@ if ($modoPorDefecto) {
               )
             ORDER BY
                 CASE WHEN NULLIF(TRIM(p.Hora), '') IS NULL THEN 1 ELSE 0 END ASC,
-                STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i') ASC,
+                COALESCE(
+                    STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i:%s'),
+                    STR_TO_DATE(NULLIF(TRIM(p.Hora), ''), '%H:%i')
+                ) ASC,
                 STR_TO_DATE(NULLIF(TRIM(p.Fecha_de_Registro), ''), '%d/%m/%Y %H:%i:%s') DESC,
                 p.id_interno DESC";
         try {
@@ -321,6 +328,12 @@ if ($modoPorDefecto) {
             }
         } catch (Throwable) {
         }
+    }
+}
+
+foreach ($ordenGrupo as $gk) {
+    if (($grupos[$gk] ?? []) !== []) {
+        $grupos[$gk] = programacion_ordenar_filas_por_fecha_hora($grupos[$gk]);
     }
 }
 
@@ -489,8 +502,13 @@ if ($modoPorDefecto) {
                 }
                 $titulo = $gkey === '_SIN' ? 'Sin planta asignada' : ($plantasEt[$gkey] ?? $gkey);
                 $cnt = count($filasG);
-                $borderPlanta = $gkey === 'BENEFICIO' ? 'border-l-emerald-500' : ($gkey === 'DESPOSTE' ? 'border-l-rose-500' : ($gkey === 'CELFRIO' ? 'border-l-sky-500' : 'border-l-amber-500'));
-                $iconPlanta = $gkey === 'BENEFICIO' ? '🚚' : ($gkey === 'DESPOSTE' ? '🥩' : ($gkey === 'CELFRIO' ? '❄️' : '⚠️'));
+                [$borderPlanta, $iconPlanta] = match ($gkey) {
+                    'BENEFICIO' => ['border-l-emerald-500', '🚚'],
+                    'DESPOSTE' => ['border-l-rose-500', '🥩'],
+                    'CELFRIO' => ['border-l-sky-500', '❄️'],
+                    'SUBPRODUCTOS' => ['border-l-violet-500', '📦'],
+                    default => ['border-l-amber-500', '⚠️'],
+                };
                 ?>
             <section class="mb-10">
                 <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-t-[1.5rem] border border-slate-100 border-b-0 shadow-sm <?= $borderPlanta ?> border-l-[6px]">

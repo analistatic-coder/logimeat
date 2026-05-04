@@ -26,11 +26,12 @@ function programacion_plantas_opciones(): array
         'BENEFICIO' => 'Beneficio',
         'DESPOSTE' => 'Desposte',
         'CELFRIO' => 'Celfrio',
+        'SUBPRODUCTOS' => 'Subproductos',
     ];
 }
 
 /**
- * ID numérico en tabla `Planta` (maestro nivel 5): 1=BENEFICIO, 2=DESPOSTE, 3=CELFRIO.
+ * ID numérico en tabla `Planta` (maestro): 1=BENEFICIO, 2=DESPOSTE, 3=CELFRIO, 4=SUBPRODUCTOS.
  */
 function programacion_id_maestro_desde_grupo(string $grupo): ?string
 {
@@ -38,20 +39,21 @@ function programacion_id_maestro_desde_grupo(string $grupo): ?string
         'BENEFICIO' => '1',
         'DESPOSTE' => '2',
         'CELFRIO' => '3',
+        'SUBPRODUCTOS' => '4',
         default => null,
     };
 }
 
 /**
  * Grupo operativo para agrupar y mostrar. Prioriza `Planta_Operativa`; si falta, usa la columna
- * legada `Programacion.Planta` (1/2/3 como en Programacion.sql). No usa Destino.
+ * legada `Programacion.Planta` (1–4). No usa Destino.
  *
- * @return 'BENEFICIO'|'DESPOSTE'|'CELFRIO'|'_SIN'
+ * @return 'BENEFICIO'|'DESPOSTE'|'CELFRIO'|'SUBPRODUCTOS'|'_SIN'
  */
 function programacion_grupo_desde_fila(array $r): string
 {
     $po = trim((string) ($r['Planta_Operativa'] ?? ''));
-    if (in_array($po, ['BENEFICIO', 'DESPOSTE', 'CELFRIO'], true)) {
+    if (in_array($po, ['BENEFICIO', 'DESPOSTE', 'CELFRIO', 'SUBPRODUCTOS'], true)) {
         return $po;
     }
 
@@ -70,6 +72,9 @@ function programacion_grupo_desde_fila(array $r): string
         }
         if ($n === 3) {
             return 'CELFRIO';
+        }
+        if ($n === 4) {
+            return 'SUBPRODUCTOS';
         }
     }
 
@@ -107,6 +112,12 @@ function programacion_productos_por_planta(): array
             'Visceras acondicionadas',
             'Productos despostado',
         ],
+        'SUBPRODUCTOS' => [
+            'Subproductos',
+            'Aprovechamientos',
+            'Visceras',
+            'Producto despostado',
+        ],
     ];
 }
 
@@ -131,7 +142,78 @@ function programacion_tipos_cuarteo_por_planta(): array
         'BENEFICIO' => ['REGIONAL', 'PISTOLA'],
         'DESPOSTE' => [],
         'CELFRIO' => [],
+        'SUBPRODUCTOS' => [],
     ];
+}
+
+/** Timestamp UNIX de Fecha_de_Operacion d/m/Y o null si no parsea. */
+function programacion_ts_fecha_operacion(?string $dmy): ?int
+{
+    $dmy = trim((string) $dmy);
+    if ($dmy === '') {
+        return null;
+    }
+    $dt = DateTime::createFromFormat('d/m/Y', $dmy);
+
+    return $dt instanceof DateTime ? (int) $dt->format('U') : null;
+}
+
+/** Segundos desde medianoche para Hora HH:MM o HH:MM:SS; null si vacío o inválido. */
+function programacion_ts_hora_dia(?string $hora): ?int
+{
+    $hora = trim((string) $hora);
+    if ($hora === '') {
+        return null;
+    }
+    foreach (['H:i:s', 'H:i'] as $fmt) {
+        $dt = DateTime::createFromFormat($fmt, $hora);
+        if ($dt instanceof DateTime) {
+            return (int) $dt->format('H') * 3600 + (int) $dt->format('i') * 60 + (int) $dt->format('s');
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Ordena filas de programación por fecha de operación (asc), hora (asc), id_interno (desc).
+ *
+ * @param list<array<string, mixed>> $filas
+ * @return list<array<string, mixed>>
+ */
+function programacion_ordenar_filas_por_fecha_hora(array $filas): array
+{
+    usort($filas, static function (array $a, array $b): int {
+        $fa = programacion_ts_fecha_operacion($a['Fecha_de_Operacion'] ?? null);
+        $fb = programacion_ts_fecha_operacion($b['Fecha_de_Operacion'] ?? null);
+        if ($fa !== $fb) {
+            if ($fa === null) {
+                return 1;
+            }
+            if ($fb === null) {
+                return -1;
+            }
+
+            return $fa <=> $fb;
+        }
+
+        $ha = programacion_ts_hora_dia($a['Hora'] ?? null);
+        $hb = programacion_ts_hora_dia($b['Hora'] ?? null);
+        if ($ha !== $hb) {
+            if ($ha === null) {
+                return 1;
+            }
+            if ($hb === null) {
+                return -1;
+            }
+
+            return $ha <=> $hb;
+        }
+
+        return (int) ($b['id_interno'] ?? 0) <=> (int) ($a['id_interno'] ?? 0);
+    });
+
+    return $filas;
 }
 
 /** Icono según nombre de actividad (programación operativa). */
