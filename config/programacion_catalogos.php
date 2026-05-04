@@ -16,7 +16,17 @@ function programacion_actividades_base(): array
 }
 
 /**
- * Clave interna => etiqueta visible.
+ * Orden fijo de plantas en vista programación y formularios (flujo operativo).
+ *
+ * @return list<string>
+ */
+function programacion_plantas_orden_vista(): array
+{
+    return ['BENEFICIO', 'DESPOSTE', 'SUBPRODUCTOS', 'CELFRIO'];
+}
+
+/**
+ * Clave interna => etiqueta visible (mismo orden que {@see programacion_plantas_orden_vista()}).
  *
  * @return array<string, string>
  */
@@ -25,8 +35,8 @@ function programacion_plantas_opciones(): array
     return [
         'BENEFICIO' => 'Beneficio',
         'DESPOSTE' => 'Desposte',
-        'CELFRIO' => 'Celfrio',
         'SUBPRODUCTOS' => 'Subproductos',
+        'CELFRIO' => 'Celfrio',
     ];
 }
 
@@ -108,15 +118,15 @@ function programacion_productos_por_planta(): array
             'Aprovechamientos',
             'Visceras',
         ],
-        'CELFRIO' => [
-            'Visceras acondicionadas',
-            'Productos despostado',
-        ],
         'SUBPRODUCTOS' => [
             'Subproductos',
             'Aprovechamientos',
             'Visceras',
             'Producto despostado',
+        ],
+        'CELFRIO' => [
+            'Visceras acondicionadas',
+            'Productos despostado',
         ],
     ];
 }
@@ -141,8 +151,8 @@ function programacion_tipos_cuarteo_por_planta(): array
     return [
         'BENEFICIO' => ['REGIONAL', 'PISTOLA'],
         'DESPOSTE' => [],
-        'CELFRIO' => [],
         'SUBPRODUCTOS' => [],
+        'CELFRIO' => [],
     ];
 }
 

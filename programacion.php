@@ -238,7 +238,7 @@ $st->execute($params);
 $todas = $st->fetchAll(PDO::FETCH_ASSOC);
 $filas_cargadas = count($todas);
 
-$ordenGrupo = ['BENEFICIO', 'DESPOSTE', 'CELFRIO', 'SUBPRODUCTOS', '_SIN'];
+$ordenGrupo = array_merge(programacion_plantas_orden_vista(), ['_SIN']);
 $grupos = [];
 foreach ($ordenGrupo as $k) {
     $grupos[$k] = [];
@@ -256,8 +256,8 @@ if ($modoPorDefecto) {
     $condGrupoSql = [
         'BENEFICIO' => "(p.Planta_Operativa = 'BENEFICIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '1'))",
         'DESPOSTE' => "(p.Planta_Operativa = 'DESPOSTE' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '2'))",
-        'CELFRIO' => "(p.Planta_Operativa = 'CELFRIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '3'))",
         'SUBPRODUCTOS' => "(p.Planta_Operativa = 'SUBPRODUCTOS' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '4'))",
+        'CELFRIO' => "(p.Planta_Operativa = 'CELFRIO' OR (TRIM(COALESCE(p.Planta_Operativa,'')) = '' AND CAST(p.Planta AS CHAR) = '3'))",
     ];
     foreach ($ordenGrupo as $k) {
         $filasGrupo = $grupos[$k] ?? [];
@@ -497,7 +497,8 @@ foreach ($ordenGrupo as $gk) {
             <?php
             foreach ($ordenGrupo as $gkey):
                 $filasG = $grupos[$gkey] ?? [];
-                if ($filasG === []) {
+                // SUBPRODUCTOS: mostrar sección aunque no haya filas (vista por planta).
+                if ($filasG === [] && $gkey !== 'SUBPRODUCTOS') {
                     continue;
                 }
                 $titulo = $gkey === '_SIN' ? 'Sin planta asignada' : ($plantasEt[$gkey] ?? $gkey);
@@ -555,7 +556,13 @@ foreach ($ordenGrupo as $gk) {
                             </tr>
                         </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <?php foreach ($filasG as $r):
+                                <?php if ($filasG === []): ?>
+                                <tr>
+                                    <td colspan="32" class="text-center text-slate-400 py-10 text-xs font-semibold uppercase tracking-wide">
+                                        Sin programación para esta planta. Use <a href="nueva_programacion.php" class="text-violet-600 underline hover:text-violet-800">nueva programación</a> para registrar.
+                                    </td>
+                                </tr>
+                                <?php else: foreach ($filasG as $r):
                                     $st = (string) ($r['Estado_Actividad'] ?? '');
                                     $class = ($st === 'PROGRAMADO') ? 'bg-red-50 text-red-700 border border-red-100' : (($st === 'EJECUTADO') ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-amber-50 text-amber-900 border border-amber-100');
                                     $nomAct = $r['NomAct'] ?? '';
@@ -614,7 +621,7 @@ foreach ($ordenGrupo as $gk) {
                                         <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-blue-600 font-black hover:bg-blue-50" title="Editar">›</a>
                                 </td>
                             </tr>
-                            <?php endforeach; ?>
+                            <?php endforeach; endif; ?>
                         </tbody>
                     </table>
                     </div>
