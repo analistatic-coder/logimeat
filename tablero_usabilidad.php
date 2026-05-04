@@ -71,6 +71,15 @@ foreach ($stats['usuarios_top'] as $row) {
         </div>
         <?php endif; ?>
 
+        <?php if ($tablaLista): ?>
+        <p id="lum-total-bd" class="mb-6 text-center text-xs font-bold text-slate-600">
+            Eventos guardados en base de datos (sin filtrar por periodo): <span id="lum-total-bd-num"><?= number_format((int) ($stats['total_eventos'] ?? 0), 0, ',', '.') ?></span>
+            <?php if ((int) ($stats['total_eventos'] ?? 0) === 0): ?>
+                <span class="block mt-2 text-amber-700 font-semibold normal-case">Si sigue en 0 tras usar el sistema, el usuario MySQL puede no tener permiso CREATE/ALTER: ejecute <code class="bg-slate-100 px-1 rounded">php scripts/aplicar_schema_usabilidad.php</code> en el servidor o cree la tabla manualmente.</span>
+            <?php endif; ?>
+        </p>
+        <?php endif; ?>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-8">
                 <p class="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-2">Inicios de sesión</p>
@@ -282,6 +291,8 @@ foreach ($stats['usuarios_top'] as $row) {
         if (k1) k1.textContent = fmt(s.total_logins);
         if (k2) k2.textContent = fmt(s.total_paginas);
         if (k3) k3.textContent = fmt(s.usuarios_activos);
+        var tbd = document.getElementById('lum-total-bd-num');
+        if (tbd && typeof s.total_eventos !== 'undefined') tbd.textContent = fmt(s.total_eventos);
         renderChart(s.sesiones_por_dia || []);
         renderModulos(s.modulos || []);
         renderUsuarios(s.usuarios_top || []);

@@ -20,9 +20,9 @@ function lm_usabilidad_tabla_exist(PDO $pdo): bool
 
 function lm_usabilidad_ensure_table(PDO $pdo): bool
 {
-    static $ensured = null;
-    if ($ensured !== null) {
-        return $ensured;
+    static $listo = false;
+    if ($listo) {
+        return true;
     }
     try {
         $pdo->exec(
@@ -30,7 +30,7 @@ function lm_usabilidad_ensure_table(PDO $pdo): bool
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 tipo ENUM('login','pagina') NOT NULL,
                 modulo VARCHAR(96) NOT NULL,
-                id_user INT NULL,
+                id_user VARCHAR(64) NULL,
                 rol VARCHAR(80) NULL,
                 ip VARCHAR(45) NULL,
                 user_agent VARCHAR(255) NULL,
@@ -40,12 +40,37 @@ function lm_usabilidad_ensure_table(PDO $pdo): bool
                 INDEX idx_user_fecha (id_user, creado_en)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         );
-        $ensured = true;
-    } catch (Throwable) {
-        $ensured = false;
+    } catch (Throwable $e) {
+        error_log('lm_usabilidad_ensure_table CREATE: ' . $e->getMessage());
+
+        return false;
     }
 
-    return $ensured;
+    // Tablas creadas antes con id_user INT: ampliar para aceptar el mismo formato que User.ID_User (ej. US-0001).
+    static $migradoTipoId = false;
+    if (!$migradoTipoId) {
+        $migradoTipoId = true;
+        try {
+            if (lm_usabilidad_tabla_exist($pdo)) {
+                $db = (string) $pdo->query('SELECT DATABASE()')->fetchColumn();
+                $st = $pdo->prepare(
+                    'SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+                );
+                $st->execute([$db, 'app_usabilidad_evento', 'id_user']);
+                $tipo = (string) $st->fetchColumn();
+                if ($tipo !== '' && stripos($tipo, 'int') !== false) {
+                    $pdo->exec('ALTER TABLE app_usabilidad_evento MODIFY id_user VARCHAR(64) NULL');
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('lm_usabilidad_ensure_table ALTER id_user: ' . $e->getMessage());
+        }
+    }
+
+    $listo = true;
+
+    return true;
 }
 
 function lm_usabilidad_modulo_actual(): string
@@ -80,8 +105,8 @@ function lm_usabilidad_registrar_peticion_autenticada(PDO $pdo): void
         return;
     }
 
-    $uid = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
-    if ($uid <= 0) {
+    $uidRaw = isset($_SESSION['user_id']) ? trim((string) $_SESSION['user_id']) : '';
+    if ($uidRaw === '') {
         return;
     }
 
@@ -104,15 +129,16 @@ function lm_usabilidad_registrar_peticion_autenticada(PDO $pdo): void
         $st = $pdo->prepare(
             'INSERT INTO app_usabilidad_evento (tipo, modulo, id_user, rol, ip, user_agent) VALUES (\'pagina\', ?, ?, ?, ?, ?)'
         );
-        $st->execute([$mod, $uid, $rol !== '' ? $rol : null, $ip !== '' ? $ip : null, $ua !== '' ? $ua : null]);
-    } catch (Throwable) {
-        // no bloquear la app
+        $st->execute([$mod, $uidRaw, $rol !== '' ? $rol : null, $ip !== '' ? $ip : null, $ua !== '' ? $ua : null]);
+    } catch (Throwable $e) {
+        error_log('lm_usabilidad_registrar_peticion: ' . $e->getMessage());
     }
 }
 
-function lm_usabilidad_registrar_login(PDO $pdo, int $idUser, string $rol): void
+function lm_usabilidad_registrar_login(PDO $pdo, string|int $idUser, string $rol): void
 {
-    if ($idUser <= 0 || !lm_usabilidad_ensure_table($pdo)) {
+    $idStr = trim((string) $idUser);
+    if ($idStr === '' || !lm_usabilidad_ensure_table($pdo)) {
         return;
     }
     $ip = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
@@ -128,8 +154,9 @@ function lm_usabilidad_registrar_login(PDO $pdo, int $idUser, string $rol): void
         $st = $pdo->prepare(
             'INSERT INTO app_usabilidad_evento (tipo, modulo, id_user, rol, ip, user_agent) VALUES (\'login\', \'sesion\', ?, ?, ?, ?)'
         );
-        $st->execute([$idUser, $rolT !== '' ? $rolT : null, $ip !== '' ? $ip : null, $ua !== '' ? $ua : null]);
-    } catch (Throwable) {
+        $st->execute([$idStr, $rolT !== '' ? $rolT : null, $ip !== '' ? $ip : null, $ua !== '' ? $ua : null]);
+    } catch (Throwable $e) {
+        error_log('lm_usabilidad_registrar_login: ' . $e->getMessage());
     }
 }
 
@@ -138,6 +165,7 @@ function lm_usabilidad_registrar_login(PDO $pdo, int $idUser, string $rol): void
  *
  * @return array{
  *   tabla_ok: bool,
+ *   total_eventos: int,
  *   total_logins: int,
  *   total_paginas: int,
  *   usuarios_activos: int,
@@ -151,6 +179,7 @@ function lm_usabilidad_estadisticas(PDO $pdo, int $dias): array
 {
     $base = [
         'tabla_ok' => false,
+        'total_eventos' => 0,
         'total_logins' => 0,
         'total_paginas' => 0,
         'usuarios_activos' => 0,
@@ -171,6 +200,8 @@ function lm_usabilidad_estadisticas(PDO $pdo, int $dias): array
     $fechaDesde = date('Y-m-d H:i:s', strtotime('-' . $dias . ' days'));
 
     try {
+        $totalEventos = (int) $pdo->query('SELECT COUNT(*) FROM app_usabilidad_evento')->fetchColumn();
+
         $st = $pdo->prepare(
             'SELECT COUNT(*) FROM app_usabilidad_evento WHERE tipo = \'login\' AND creado_en >= ?'
         );
@@ -230,8 +261,9 @@ function lm_usabilidad_estadisticas(PDO $pdo, int $dias): array
                     COALESCE(NULLIF(TRIM(MAX(u.Nombre)), \'\'), CONCAT(\'ID \', e.id_user)) AS nombre,
                     COUNT(*) AS c
              FROM app_usabilidad_evento e
-             LEFT JOIN `User` u ON u.ID_User = e.id_user
-             WHERE e.tipo = \'pagina\' AND e.id_user IS NOT NULL AND e.creado_en >= ?
+             LEFT JOIN `User` u ON TRIM(CAST(u.ID_User AS CHAR)) COLLATE utf8mb4_unicode_ci
+                 = TRIM(CAST(e.id_user AS CHAR)) COLLATE utf8mb4_unicode_ci
+             WHERE e.tipo = \'pagina\' AND e.id_user IS NOT NULL AND TRIM(e.id_user) <> \'\' AND e.creado_en >= ?
              GROUP BY e.id_user
              ORDER BY c DESC
              LIMIT 12'
@@ -248,6 +280,7 @@ function lm_usabilidad_estadisticas(PDO $pdo, int $dias): array
 
         return [
             'tabla_ok' => true,
+            'total_eventos' => $totalEventos,
             'total_logins' => $totalLogins,
             'total_paginas' => $totalPaginas,
             'usuarios_activos' => $usuariosActivos,
@@ -261,6 +294,7 @@ function lm_usabilidad_estadisticas(PDO $pdo, int $dias): array
 
         return [
             'tabla_ok' => true,
+            'total_eventos' => 0,
             'total_logins' => 0,
             'total_paginas' => 0,
             'usuarios_activos' => 0,
