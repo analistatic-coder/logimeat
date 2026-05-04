@@ -86,7 +86,7 @@ function lm_usabilidad_registrar_peticion_autenticada(PDO $pdo): void
     }
 
     $mod = lm_usabilidad_modulo_actual();
-    if ($mod === 'login') {
+    if ($mod === 'login' || $mod === 'tablero_usabilidad_datos') {
         return;
     }
 
@@ -130,6 +130,145 @@ function lm_usabilidad_registrar_login(PDO $pdo, int $idUser, string $rol): void
         );
         $st->execute([$idUser, $rolT !== '' ? $rolT : null, $ip !== '' ? $ip : null, $ua !== '' ? $ua : null]);
     } catch (Throwable) {
+    }
+}
+
+/**
+ * Métricas agregadas para el tablero de usabilidad (Super Admin).
+ *
+ * @return array{
+ *   tabla_ok: bool,
+ *   total_logins: int,
+ *   total_paginas: int,
+ *   usuarios_activos: int,
+ *   sesiones_por_dia: list<array{dia: string, c: int}>,
+ *   modulos: list<array{modulo: string, c: int, etiqueta: string}>,
+ *   usuarios_top: list<array{nombre: string, c: int}>,
+ *   error: ?string
+ * }
+ */
+function lm_usabilidad_estadisticas(PDO $pdo, int $dias): array
+{
+    $base = [
+        'tabla_ok' => false,
+        'total_logins' => 0,
+        'total_paginas' => 0,
+        'usuarios_activos' => 0,
+        'sesiones_por_dia' => [],
+        'modulos' => [],
+        'usuarios_top' => [],
+        'error' => null,
+    ];
+
+    lm_usabilidad_ensure_table($pdo);
+    if (!lm_usabilidad_tabla_exist($pdo)) {
+        $base['error'] = 'sin_tabla';
+
+        return $base;
+    }
+
+    $dias = max(1, min(366, $dias));
+    $fechaDesde = date('Y-m-d H:i:s', strtotime('-' . $dias . ' days'));
+
+    try {
+        $st = $pdo->prepare(
+            'SELECT COUNT(*) FROM app_usabilidad_evento WHERE tipo = \'login\' AND creado_en >= ?'
+        );
+        $st->execute([$fechaDesde]);
+        $totalLogins = (int) $st->fetchColumn();
+
+        $st = $pdo->prepare(
+            'SELECT COUNT(*) FROM app_usabilidad_evento WHERE tipo = \'pagina\' AND creado_en >= ?'
+        );
+        $st->execute([$fechaDesde]);
+        $totalPaginas = (int) $st->fetchColumn();
+
+        $st = $pdo->prepare(
+            'SELECT COUNT(DISTINCT id_user) FROM app_usabilidad_evento
+             WHERE tipo = \'pagina\' AND id_user IS NOT NULL AND creado_en >= ?'
+        );
+        $st->execute([$fechaDesde]);
+        $usuariosActivos = (int) $st->fetchColumn();
+
+        $st = $pdo->prepare(
+            'SELECT DATE(creado_en) AS dia, COUNT(*) AS c
+             FROM app_usabilidad_evento
+             WHERE tipo = \'login\' AND creado_en >= ?
+             GROUP BY DATE(creado_en)
+             ORDER BY dia ASC'
+        );
+        $st->execute([$fechaDesde]);
+        $sesiones = $st->fetchAll(PDO::FETCH_ASSOC);
+        $sesionesNorm = [];
+        foreach ($sesiones as $r) {
+            $sesionesNorm[] = [
+                'dia' => (string) ($r['dia'] ?? ''),
+                'c' => (int) ($r['c'] ?? 0),
+            ];
+        }
+
+        $st = $pdo->prepare(
+            'SELECT modulo, COUNT(*) AS c
+             FROM app_usabilidad_evento
+             WHERE tipo = \'pagina\' AND creado_en >= ?
+             GROUP BY modulo ORDER BY c DESC LIMIT 18'
+        );
+        $st->execute([$fechaDesde]);
+        $modsRaw = $st->fetchAll(PDO::FETCH_ASSOC);
+        $modulos = [];
+        foreach ($modsRaw as $r) {
+            $m = (string) ($r['modulo'] ?? '');
+            $modulos[] = [
+                'modulo' => $m,
+                'c' => (int) ($r['c'] ?? 0),
+                'etiqueta' => lm_usabilidad_etiqueta_modulo($m),
+            ];
+        }
+
+        $st = $pdo->prepare(
+            'SELECT e.id_user,
+                    COALESCE(NULLIF(TRIM(MAX(u.Nombre)), \'\'), CONCAT(\'ID \', e.id_user)) AS nombre,
+                    COUNT(*) AS c
+             FROM app_usabilidad_evento e
+             LEFT JOIN `User` u ON u.ID_User = e.id_user
+             WHERE e.tipo = \'pagina\' AND e.id_user IS NOT NULL AND e.creado_en >= ?
+             GROUP BY e.id_user
+             ORDER BY c DESC
+             LIMIT 12'
+        );
+        $st->execute([$fechaDesde]);
+        $usersRaw = $st->fetchAll(PDO::FETCH_ASSOC);
+        $usuariosTop = [];
+        foreach ($usersRaw as $r) {
+            $usuariosTop[] = [
+                'nombre' => (string) ($r['nombre'] ?? ''),
+                'c' => (int) ($r['c'] ?? 0),
+            ];
+        }
+
+        return [
+            'tabla_ok' => true,
+            'total_logins' => $totalLogins,
+            'total_paginas' => $totalPaginas,
+            'usuarios_activos' => $usuariosActivos,
+            'sesiones_por_dia' => $sesionesNorm,
+            'modulos' => $modulos,
+            'usuarios_top' => $usuariosTop,
+            'error' => null,
+        ];
+    } catch (Throwable $e) {
+        error_log('lm_usabilidad_estadisticas: ' . $e->getMessage());
+
+        return [
+            'tabla_ok' => true,
+            'total_logins' => 0,
+            'total_paginas' => 0,
+            'usuarios_activos' => 0,
+            'sesiones_por_dia' => [],
+            'modulos' => [],
+            'usuarios_top' => [],
+            'error' => 'consulta',
+        ];
     }
 }
 
@@ -180,6 +319,7 @@ function lm_usabilidad_etiqueta_modulo(string $modulo): string
         'empleados_importar' => 'Importar empleados',
         'cambiar_password' => 'Cambiar contraseña',
         'tablero_usabilidad' => 'Este tablero',
+        'tablero_usabilidad_datos' => 'Actualización tablero (automático)',
     ];
 
     return $map[$modulo] ?? ucfirst(str_replace(['_', ':'], [' ', ': '], $modulo));
