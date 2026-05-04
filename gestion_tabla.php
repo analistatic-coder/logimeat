@@ -6,18 +6,18 @@ require_once __DIR__ . '/config/logisticos_vinculo_maestro.php';
 // 1. SEGURIDAD Y PARÁMETROS DE RUTA
 $es_admin = lm_es_admin();
 $es_super_admin = lm_es_super_admin();
-$tabla_get = $_GET['tabla'] ?? 'clientes'; 
+$tabla_get = strtolower(trim((string) ($_GET['tabla'] ?? 'clientes')));
 $tablas_permitidas = [
     'clientes', 'corte', 'departamento', 'municipio', 'opl', 'producto', 'tipo_de_cuarteo', 'zona', 'vehiculo', 'conductor',
     'user', 'actividad', 'planta', 'logisticos',
     'empleado', 'empleado_descanso', 'empleado_programacion',
 ];
 
-if (!in_array(strtolower($tabla_get), $tablas_permitidas)) {
+if (!in_array($tabla_get, $tablas_permitidas, true)) {
     header("Location: maestros.php?error=no_autorizado");
     exit();
 }
-if (strtolower($tabla_get) === 'user' && !$es_super_admin) {
+if ($tabla_get === 'user' && !$es_super_admin) {
     header("Location: maestros.php?error=no_autorizado");
     exit();
 }
@@ -104,6 +104,10 @@ if ($tiene_id_interno) {
 
 // 4. PROCESAMIENTO POST (CRUD)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
+    if (!lm_csrf_validar($_POST['_csrf'] ?? null)) {
+        header('Location: maestros.php?error=csrf');
+        exit();
+    }
     try {
         if ($_POST['action'] == 'eliminar_manual') {
             $id_borrar = $_POST['id_a_borrar'];
@@ -126,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                 $datos_post['vinculo_conductor'],
                 $datos_post['vinculo_vehiculo']
             );
-            
+
             if ($action == 'crear') {
                 $asignar_id_auto = !($empleado_cedula_como_pk);
                 if ($columna_id_maestro && $asignar_id_auto) {
@@ -273,6 +277,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl transition-all scale-95 opacity-0 duration-300" id="modalMaestroContent">
             <h3 id="modalTitulo" class="text-2xl font-extrabold text-slate-800 mb-6 italic uppercase tracking-tighter">Formulario</h3>
             <form method="POST" class="space-y-4">
+                <?= lm_csrf_field() ?>
                 <input type="hidden" name="action" id="formAction">
                 <input type="hidden" name="id_interno_hidden" id="formIdInternoHidden">
                 
@@ -292,6 +297,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             <h3 class="text-xl font-bold text-slate-800 mb-2 uppercase italic">Eliminar</h3>
             <p class="text-[10px] text-slate-400 font-bold mb-6 uppercase"><?= $empleado_cedula_como_pk ? 'Ingrese la cédula (ID empleado) para confirmar' : 'Ingresa el valor de la clave (p. ej. ID interno) para confirmar' ?></p>
             <form method="POST">
+                <?= lm_csrf_field() ?>
                 <input type="hidden" name="action" value="eliminar_manual">
                 <input type="<?= $empleado_cedula_como_pk ? 'text' : 'number' ?>" name="id_a_borrar" required placeholder="<?= $empleado_cedula_como_pk ? 'Cédula' : 'ID' ?>" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl mb-6 text-center font-black <?= $empleado_cedula_como_pk ? 'text-lg' : 'text-3xl' ?> outline-none focus:ring-4 focus:ring-red-500/10 transition-all">
                 <div class="flex gap-3">

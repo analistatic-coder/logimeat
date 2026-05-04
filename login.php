@@ -1,18 +1,19 @@
 <?php
 session_start();
 require_once 'conexion.php';
+require_once __DIR__ . '/config/usabilidad_log.php';
 
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
-    header("Location: login.php?msg=off");
+    header('Location: login.php?msg=off');
     exit();
 }
 
-$error = "";
+$error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user = $_POST['usuario'];
     $pass = $_POST['clave'];
-    $stmt = $pdo->prepare("SELECT * FROM User WHERE Nombre = ? AND Clave = ?");
+    $stmt = $pdo->prepare('SELECT * FROM User WHERE Nombre = ? AND Clave = ?');
     $stmt->execute([$user, $pass]);
     $usuario = $stmt->fetch();
 
@@ -31,11 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             $_SESSION['rol'] = $rolRaw !== '' ? $rolRaw : 'Operativo';
         }
-        $_SESSION['ultima_actividad'] = time(); 
-        header("Location: index.php");
+        $_SESSION['ultima_actividad'] = time();
+        lm_usabilidad_registrar_login($pdo, (int) $usuario['ID_User'], (string) ($_SESSION['rol'] ?? ''));
+        header('Location: index.php');
         exit();
     } else {
-        $error = "Acceso denegado. Verifique sus credenciales.";
+        $error = 'Acceso denegado. Verifique sus credenciales.';
     }
 }
 ?>
@@ -53,9 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <h1 class="text-3xl font-bold italic text-slate-800">Logi<span class="text-blue-600">Meat</span></h1>
             <p class="text-slate-400 text-[10px] mt-2 uppercase tracking-widest font-black">Control de Acceso</p>
         </div>
-        <?php if($error || isset($_GET['error'])): ?>
+        <?php if ($error || isset($_GET['error'])): ?>
             <div class="bg-red-50 text-red-600 p-4 rounded-2xl text-[10px] font-bold mb-6 text-center border border-red-100 uppercase">
-                <?= $error ?: 'Sesión caducada por inactividad' ?>
+                <?= htmlspecialchars($error ?: 'Sesión caducada por inactividad', ENT_QUOTES, 'UTF-8') ?>
             </div>
         <?php endif; ?>
         <form method="POST" class="space-y-5">

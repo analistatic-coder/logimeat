@@ -1,5 +1,8 @@
 <?php
+require_once __DIR__ . '/config/seguridad.php';
+lm_seguridad_session_before_start();
 session_start();
+lm_seguridad_headers_enviar();
 
 function lm_rol_actual(): string
 {
@@ -88,6 +91,11 @@ function mostrarSidebar($activePage = '') {
                     <a href="maestros.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'maestros' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">
                         <span>⚙️</span> <span class="text-sm font-bold">Configuración</span>
                     </a>
+                    <?php if (lm_es_super_admin()): ?>
+                    <a href="tablero_usabilidad.php" class="mt-2 flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'usabilidad' ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/30' : 'hover:bg-slate-800' ?>">
+                        <span>📊</span> <span class="text-sm font-bold">Usabilidad</span>
+                    </a>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </nav>

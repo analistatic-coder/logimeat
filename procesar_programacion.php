@@ -11,6 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
+if (!lm_csrf_validar($_POST['_csrf'] ?? null)) {
+    die('Solicitud no válida o sesión de seguridad caducada. Vuelva a abrir «Nueva programación» e intente de nuevo.');
+}
+
 $idProg = trim((string) ($_POST['id_programacion_generado'] ?? ''));
 if (!programacion_id_programacion_valido($idProg)) {
     die('Identificador de programación inválido o manipulado. Vuelva a cargar «Nueva programación».');

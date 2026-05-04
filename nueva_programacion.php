@@ -142,6 +142,7 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
         </header>
 
         <form action="procesar_programacion.php" method="POST" class="max-w-5xl bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm space-y-10">
+            <?= lm_csrf_field() ?>
             <input type="hidden" name="id_programacion_generado" value="<?= htmlspecialchars($idProgGen, ENT_QUOTES, 'UTF-8') ?>">
 
             <section class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 grid grid-cols-1 md:grid-cols-2 gap-4">

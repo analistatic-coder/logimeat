@@ -44,6 +44,9 @@ if (lm_es_super_admin()) {
         'items' => [
             ['id' => 'user', 'label' => 'Usuarios', 'icon' => '🔐'],
         ],
+        'extra_links' => [
+            ['href' => 'tablero_usabilidad.php', 'label' => 'Tablero de usabilidad', 'icon' => '📊'],
+        ],
     ];
 }
 ?>
@@ -66,6 +69,18 @@ if (lm_es_super_admin()) {
                 <h2 class="text-3xl font-bold text-slate-800 tracking-tight italic">Panel de Configuración</h2>
                 <p class="text-slate-500 font-medium text-sm">Gestión técnica de tablas maestras del ERP.</p>
             </header>
+
+            <?php if (isset($_GET['error'])): ?>
+                <?php if ($_GET['error'] === 'csrf'): ?>
+                <div class="mb-8 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm font-bold text-center">
+                    La validación de seguridad falló o la sesión caducó. Vuelva a abrir la tabla e intente de nuevo.
+                </div>
+                <?php elseif ($_GET['error'] === 'no_autorizado'): ?>
+                <div class="mb-8 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-sm font-bold text-center">
+                    No tiene permiso para acceder a ese recurso.
+                </div>
+                <?php endif; ?>
+            <?php endif; ?>
 
             <?php foreach ($secciones_maestros as $sec): ?>
             <section class="mb-14">
