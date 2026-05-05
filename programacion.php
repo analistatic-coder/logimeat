@@ -67,59 +67,79 @@ function programacion_blob_busqueda_local(array $r): string
     return mb_strtoupper(implode(' ', $parts), 'UTF-8');
 }
 
-/**
- * Texto de fechas para el encabezado: filtros aplicados o rango mínimo/máximo de las filas visibles por planta.
- */
-function programacion_subtitulo_fechas_visibles(array $ordenGrupo, array $grupos, string $desde, string $hasta): string
+/** Ruta base URL del proyecto (vacío si la app está en la raíz del host; p. ej. /logimeat). */
+function programacion_base_web_path(): string
 {
-    if ($desde !== '' && $hasta !== '') {
-        try {
-            $d1 = (new DateTimeImmutable($desde))->format('d/m/Y');
-            $d2 = (new DateTimeImmutable($hasta))->format('d/m/Y');
+    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '/programacion.php');
+    $script = str_replace('\\', '/', $script);
+    $dir = dirname($script);
+    if ($dir === '.' || $dir === DIRECTORY_SEPARATOR || $dir === '/') {
+        return '';
+    }
 
-            return $d1 === $d2 ? $d1 : $d1 . ' — ' . $d2;
-        } catch (Throwable) {
-            // siguiente criterio
+    return rtrim($dir, '/');
+}
+
+/** Construye URL a un recurso bajo la misma carpeta que programacion.php (assets, etc.). */
+function programacion_asset_url(string $rutaRelAlProyecto): string
+{
+    $base = programacion_base_web_path();
+    $ruta = ltrim(str_replace('\\', '/', $rutaRelAlProyecto), '/');
+
+    return ($base !== '' ? $base . '/' : '') . $ruta;
+}
+
+/** URL a un archivo en assets/ cuando el nombre tiene espacios o caracteres especiales. */
+function programacion_assets_named_url(string $nombreArchivo, int $mtime): string
+{
+    $base = programacion_base_web_path();
+    $arch = rawurlencode($nombreArchivo);
+    $pre = ($base !== '' ? $base . '/' : '') . 'assets/' . $arch;
+
+    return $pre . '?v=' . (string) $mtime;
+}
+
+/**
+ * Logo Colbeef: busca PNG/ICO en assets/ (nombres estándar o el ICO exportado);
+ * si no hay imagen usable, SVG local embebido o marcador por defecto.
+ */
+function programacion_markup_logo_colbeef(string $dirAssets): string
+{
+    $h = static function (string $s): string {
+        return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+    };
+
+    $dirAssets = rtrim($dirAssets, '\\/');
+
+    /** @var list<string> */
+    $prioridadNombre = [
+        'colbeef-logo.png',
+        'colbeef-logo.ico',
+        // Archivo habitual al exportar desde diseño:
+        'EXPORTADAS_Mesa-de-trabajo-1 (3).ico',
+    ];
+
+    foreach ($prioridadNombre as $nom) {
+        $abs = $dirAssets . DIRECTORY_SEPARATOR . $nom;
+        if (!is_readable($abs)) {
+            continue;
         }
+        $v = (int) (@filemtime($abs) ?: 1);
+        $src = programacion_assets_named_url($nom, $v);
+
+        return '<img src="' . $h($src) . '" width="200" height="40" alt="Colbeef®" class="h-8 sm:h-9 w-auto max-w-[200px] object-contain object-left select-none" loading="eager" decoding="async">';
     }
 
-    $tsMin = null;
-    $tsMax = null;
-    foreach ($ordenGrupo as $gk) {
-        foreach (($grupos[$gk] ?? []) as $rw) {
-            $f = trim((string) ($rw['Fecha_de_Operacion'] ?? ''));
-            if ($f === '' || !preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $f)) {
-                continue;
-            }
-            $p = explode('/', $f);
-            if (count($p) !== 3) {
-                continue;
-            }
-            $dia = str_pad((string) (int) $p[0], 2, '0', STR_PAD_LEFT);
-            $mes = str_pad((string) (int) $p[1], 2, '0', STR_PAD_LEFT);
-            $anio = (string) (int) $p[2];
-            $iso = $anio . '-' . $mes . '-' . $dia;
-            $ts = strtotime($iso);
-            if ($ts === false) {
-                continue;
-            }
-            if ($tsMin === null || $ts < $tsMin) {
-                $tsMin = $ts;
-            }
-            if ($tsMax === null || $ts > $tsMax) {
-                $tsMax = $ts;
-            }
-        }
+    $absSvg = $dirAssets . DIRECTORY_SEPARATOR . 'colbeef-logo.svg';
+    $svgRaw = '';
+    if (is_readable($absSvg)) {
+        $svgRaw = trim((string) @file_get_contents($absSvg));
+    }
+    if ($svgRaw === '') {
+        $svgRaw = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 56"><text x="10" y="40" fill="#00A651" font-family="system-ui,sans-serif" font-weight="800" font-size="34" letter-spacing="-0.03em"><tspan fill="#00A651">Col</tspan><tspan fill="#DA291C">beef</tspan></text><text x="234" y="16" fill="#DA291C" font-family="system-ui,sans-serif" font-weight="700" font-size="12">®</text></svg>';
     }
 
-    if ($tsMin !== null && $tsMax !== null) {
-        $f1 = date('d/m/Y', $tsMin);
-        $f2 = date('d/m/Y', $tsMax);
-
-        return $f1 === $f2 ? $f1 : $f1 . ' — ' . $f2;
-    }
-
-    return (new DateTimeImmutable('today'))->format('d/m/Y');
+    return '<span class="prog-logo-svg-inline block" role="img" aria-label="Colbeef">' . $svgRaw . '</span>';
 }
 
 $sqlJoins = '
@@ -392,19 +412,11 @@ foreach ($ordenGrupo as $gk) {
     }
 }
 
-$fechaVistaTitulo = programacion_subtitulo_fechas_visibles($ordenGrupo, $grupos, $desde, $hasta);
-$hayFiltroFechas = ($desde !== '' && $hasta !== '');
-$subtituloFechaLinea = $hayFiltroFechas
-    ? ('Período filtrado: ' . $fechaVistaTitulo)
-    : ('Fechas de operación en pantalla: ' . $fechaVistaTitulo);
+$fechaTituloManana = (new DateTimeImmutable('tomorrow'))->format('d/m/Y');
+$tituloProgramacionConFecha = 'Programación logística (' . $fechaTituloManana . ')';
 
-$tituloProgramacionConFecha = 'Programación logística (' . $fechaVistaTitulo . ')';
-
-$logoProgAbsSvg = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'colbeef-logo.svg';
-$logoProgAbsPng = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'colbeef-logo.png';
-$urlLogoProg = is_readable($logoProgAbsPng)
-    ? 'assets/colbeef-logo.png?v=' . (string) (@filemtime($logoProgAbsPng) ?: 1)
-    : 'assets/colbeef-logo.svg?v=' . (string) (@filemtime($logoProgAbsSvg) ?: 1);
+$logoProgDirAssets = __DIR__ . DIRECTORY_SEPARATOR . 'assets';
+$logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
 
 ?>
 <!DOCTYPE html>
@@ -475,6 +487,10 @@ $urlLogoProg = is_readable($logoProgAbsPng)
             line-height: 1.2;
         }
         .status-pill { padding: 1px 6px; border-radius: 4px; font-weight: 800; font-size: 10px; }
+        .prog-logo-svg-inline svg { height: 2rem; width: auto; max-height: 2.25rem; max-width: 200px; display: block; }
+        @media (min-width: 640px) {
+            .prog-logo-svg-inline svg { height: 2.25rem; max-height: 2.25rem; }
+        }
         .compact-table thead th {
             position: sticky;
             top: 0;
@@ -496,7 +512,7 @@ $urlLogoProg = is_readable($logoProgAbsPng)
             <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Home › Programación logística</p>
-                    <p class="text-slate-500 text-xs mt-1.5 leading-snug max-w-3xl">Cada registro tiene su <span class="font-bold text-slate-700">planta asignada</span> (Beneficio / Desposte / Subproductos / Celfrio). El encabezado con la fecha se muestra junto al logo Colbeef, debajo de los filtros.</p>
+                    <p class="text-slate-500 text-xs mt-1.5 leading-snug max-w-3xl">Cada registro tiene su <span class="font-bold text-slate-700">planta asignada</span> (Beneficio / Desposte / Subproductos / Celfrio). En la barra oscura debajo de los filtros, el <span class="font-bold text-slate-700">título usa siempre la fecha de mañana</span> (día siguiente a la fecha del servidor).</p>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center">
                     <a href="nueva_programacion.php" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] shadow-lg uppercase tracking-widest hover:bg-emerald-500">+ Nueva</a>
@@ -581,13 +597,13 @@ $urlLogoProg = is_readable($logoProgAbsPng)
                 <div class="mb-4 flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 rounded-2xl border border-slate-800 bg-slate-950 px-3 sm:px-4 py-3 shadow-sm">
                     <div class="flex w-full sm:w-[200px] shrink-0 justify-center sm:justify-start order-2 sm:order-1">
                         <div class="rounded-xl bg-black px-3 sm:px-4 py-2 border border-zinc-900 shadow-inner ring-1 ring-white/5">
-                            <img src="<?= htmlspecialchars($urlLogoProg, ENT_QUOTES, 'UTF-8') ?>" width="200" height="40" alt="Colbeef®" class="h-8 sm:h-9 w-auto max-w-[200px] object-contain object-left select-none" loading="lazy" decoding="async">
+                            <?= $logoProgMarkup ?>
                         </div>
                     </div>
                     <div class="flex flex-1 min-w-0 justify-center order-1 sm:order-2 px-2">
                         <div class="text-center max-w-full">
                             <span class="block text-base sm:text-lg md:text-[1.35rem] font-black text-white tracking-tight italic leading-tight"><?= htmlspecialchars($tituloProgramacionConFecha, ENT_QUOTES, 'UTF-8') ?></span>
-                            <span class="mt-1 block text-[9px] font-semibold uppercase tracking-widest text-zinc-400"><?= htmlspecialchars($subtituloFechaLinea) ?></span>
+                            <span class="mt-1.5 block text-[9px] font-semibold tracking-wide text-zinc-400">Las filas de la tabla muestran otras fechas según filtros y reglas de prioridad (mañana, último día cargado…).</span>
                         </div>
                     </div>
                     <div class="hidden sm:flex w-[200px] shrink-0 justify-end order-3 pointer-events-none select-none" aria-hidden="true"></div>
