@@ -169,6 +169,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                 $params[] = $id_interno_referencia;
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
+                if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
+                    $idOplEditado = trim((string) ($datos_post[$columna_id_maestro] ?? ''));
+                    if ($idOplEditado !== '' && $vincConductor !== '' && $vincVehiculo !== '') {
+                        logisticos_maestro_insertar_triple($pdo, $idOplEditado, $vincConductor, $vincVehiculo);
+                    }
+                }
             }
         }
         header("Location: gestion_tabla.php?tabla=$tabla_get&msg=success");
@@ -187,6 +193,7 @@ $stmt = $pdo->query("SELECT * FROM `$tabla_get` ORDER BY $ordenListado");
 $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $columnas_vista = !empty($filas) ? array_keys($filas[0]) : array_column($columnas_info, 'Field');
 $opcionesRelacionOpl = ['conductores' => [], 'vehiculos' => []];
+$relacionesDetectadasOpl = [];
 if ($es_admin && strtolower($tabla_get) === 'opl') {
     try {
         $opcionesRelacionOpl['conductores'] = $pdo->query('SELECT ID_Conductor, Conductor FROM conductor ORDER BY Conductor ASC')->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -195,6 +202,27 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
     try {
         $opcionesRelacionOpl['vehiculos'] = $pdo->query('SELECT ID_Vehiculo, Vehiculo FROM vehiculo ORDER BY Vehiculo ASC')->fetchAll(PDO::FETCH_ASSOC) ?: [];
     } catch (Throwable) {
+    }
+    try {
+        $oplsVista = $pdo->query('SELECT ID_OPL, OPL FROM opl ORDER BY OPL ASC')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $rel = programacion_opl_relaciones($pdo, $oplsVista);
+        foreach (($rel['porOpl'] ?? []) as $idOpl => $bucket) {
+            $id = trim((string) $idOpl);
+            if ($id === '') {
+                continue;
+            }
+            $c = array_values(array_filter(
+                array_map(static fn ($x): string => trim((string) $x), $bucket['c'] ?? []),
+                static fn (string $x): bool => $x !== ''
+            ));
+            $v = array_values(array_filter(
+                array_map(static fn ($x): string => trim((string) $x), $bucket['v'] ?? []),
+                static fn (string $x): bool => $x !== ''
+            ));
+            $relacionesDetectadasOpl[$id] = ['c' => $c, 'v' => $v];
+        }
+    } catch (Throwable) {
+        $relacionesDetectadasOpl = [];
     }
 }
 ?>
@@ -319,11 +347,12 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const esTablaUser = <?= $es_tabla_user ? 'true' : 'false' ?>;
         const esTablaOpl = <?= strtolower($tabla_get) === 'opl' ? 'true' : 'false' ?>;
         const opcionesRelacionOpl = <?= json_encode($opcionesRelacionOpl, JSON_UNESCAPED_UNICODE) ?>;
+        const relacionesDetectadasOpl = <?= json_encode($relacionesDetectadasOpl, JSON_UNESCAPED_UNICODE) ?>;
         const rolesDisponibles = ['Super Admin', 'Administrador', 'Operativo'];
         const estadosDisponibles = ['ACTIVO', 'INACTIVO'];
         const accionesDisponibles = ['TODAS', 'CONSULTAR', 'CREAR', 'EDITAR', 'ELIMINAR'];
 
-        function agregarRelacionOplEnCrear() {
+        function crearBloqueRelacionOpl(vinculoConductor, vinculoVehiculo, modo) {
             if (!esTablaOpl) return;
             const contenedor = document.getElementById('camposDinamicos');
             if (!contenedor) return;
@@ -338,10 +367,12 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
 
             const hint = document.createElement('p');
             hint.className = 'text-[10px] font-semibold text-emerald-700 mb-3';
-            hint.textContent = 'Opcional: seleccione conductor y vehículo para guardarlos relacionados con esta OPL.';
+            hint.textContent = modo === 'editar'
+                ? 'Puede ajustar conductor y vehículo para guardar la relación de esta OPL.'
+                : 'Opcional: seleccione conductor y vehículo para guardarlos relacionados con esta OPL.';
             card.appendChild(hint);
 
-            const mkSelect = function (name, labelText, rows, idKey, txtKey) {
+            const mkSelect = function (name, labelText, rows, idKey, txtKey, seleccionado) {
                 const label = document.createElement('label');
                 label.className = 'block text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 tracking-widest';
                 label.textContent = labelText;
@@ -358,15 +389,31 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                     const opt = document.createElement('option');
                     opt.value = id;
                     opt.textContent = String(r[txtKey] ?? id);
+                    if (String(seleccionado || '') === id) {
+                        opt.selected = true;
+                    }
                     sel.appendChild(opt);
                 });
                 card.appendChild(label);
                 card.appendChild(sel);
             };
 
-            mkSelect('vinculo_conductor', 'Conductor', opcionesRelacionOpl.conductores, 'ID_Conductor', 'Conductor');
-            mkSelect('vinculo_vehiculo', 'Vehículo', opcionesRelacionOpl.vehiculos, 'ID_Vehiculo', 'Vehiculo');
+            mkSelect('vinculo_conductor', 'Conductor', opcionesRelacionOpl.conductores, 'ID_Conductor', 'Conductor', vinculoConductor);
+            mkSelect('vinculo_vehiculo', 'Vehículo', opcionesRelacionOpl.vehiculos, 'ID_Vehiculo', 'Vehiculo', vinculoVehiculo);
             contenedor.appendChild(card);
+        }
+
+        function agregarRelacionOplEnCrear() {
+            crearBloqueRelacionOpl('', '', 'crear');
+        }
+
+        function agregarRelacionOplEnEdicion(datosFila) {
+            if (!esTablaOpl) return;
+            const idOpl = String(datosFila[nombreColIDNegocio] || '').trim();
+            const bucket = idOpl && relacionesDetectadasOpl[idOpl] ? relacionesDetectadasOpl[idOpl] : null;
+            const conductorActual = bucket && Array.isArray(bucket.c) && bucket.c.length ? String(bucket.c[0]) : '';
+            const vehiculoActual = bucket && Array.isArray(bucket.v) && bucket.v.length ? String(bucket.v[0]) : '';
+            crearBloqueRelacionOpl(conductorActual, vehiculoActual, 'editar');
         }
 
         function abrirModalCrear() {
@@ -396,6 +443,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             document.getElementById('formIdInternoHidden').value = idInt;
             
             renderizarCampos(datosFila, true);
+            agregarRelacionOplEnEdicion(datosFila);
             mostrarModal();
         }
 
