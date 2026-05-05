@@ -398,6 +398,8 @@ $subtituloFechaLinea = $hayFiltroFechas
     ? ('Período filtrado: ' . $fechaVistaTitulo)
     : ('Fechas de operación en pantalla: ' . $fechaVistaTitulo);
 
+$tituloProgramacionConFecha = 'Programación logística (' . $fechaVistaTitulo . ')';
+
 $logoProgAbsSvg = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'colbeef-logo.svg';
 $logoProgAbsPng = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'colbeef-logo.png';
 $urlLogoProg = is_readable($logoProgAbsPng)
@@ -409,7 +411,7 @@ $urlLogoProg = is_readable($logoProgAbsPng)
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LogiMeat | Programación logística <?= htmlspecialchars('(' . $fechaVistaTitulo . ')') ?></title>
+    <title>LogiMeat | <?= htmlspecialchars($tituloProgramacionConFecha, ENT_QUOTES, 'UTF-8') ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -460,7 +462,18 @@ $urlLogoProg = is_readable($logoProgAbsPng)
         }
         /* Sin sombra interior: menos “hueco” visual entre grupos */
         .prog-card-planta { box-shadow: none; }
-        .col-t-cuarteo { width: 3.75rem !important; max-width: 4.25rem !important; min-width: 3.25rem !important; }
+        .compact-table thead th.col-t-cuarteo,
+        .compact-table tbody td.col-t-cuarteo {
+            width: 7.25rem !important;
+            min-width: 6rem !important;
+            max-width: 9rem !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            vertical-align: top !important;
+            text-align: center;
+            line-height: 1.2;
+        }
         .status-pill { padding: 1px 6px; border-radius: 4px; font-weight: 800; font-size: 10px; }
         .compact-table thead th {
             position: sticky;
@@ -483,9 +496,7 @@ $urlLogoProg = is_readable($logoProgAbsPng)
             <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Home › Programación logística</p>
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tight italic">Programación logística</h2>
-                    <p class="text-slate-600 text-sm font-bold mt-1"><?= htmlspecialchars($subtituloFechaLinea) ?></p>
-                    <p class="text-slate-500 text-xs mt-1.5 leading-snug">Cada registro tiene su <span class="font-bold text-slate-700">planta asignada</span> (Beneficio / Desposte / Subproductos / Celfrio). Destino, observaciones, OPL y vehículo son datos aparte.</p>
+                    <p class="text-slate-500 text-xs mt-1.5 leading-snug max-w-3xl">Cada registro tiene su <span class="font-bold text-slate-700">planta asignada</span> (Beneficio / Desposte / Subproductos / Celfrio). El encabezado con la fecha se muestra junto al logo Colbeef, debajo de los filtros.</p>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center">
                     <a href="nueva_programacion.php" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] shadow-lg uppercase tracking-widest hover:bg-emerald-500">+ Nueva</a>
@@ -567,9 +578,19 @@ $urlLogoProg = is_readable($logoProgAbsPng)
                 <?php endif; ?>
                 </form>
 
-                <div class="mb-4 flex flex-wrap items-center justify-end gap-4 rounded-2xl border border-slate-200 bg-slate-950 px-4 py-3 shadow-sm">
-                    <div class="mr-auto text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden sm:block">Colbeef SAS</div>
-                    <img src="<?= htmlspecialchars($urlLogoProg, ENT_QUOTES, 'UTF-8') ?>" width="220" height="44" alt="Colbeef®" class="h-9 w-auto max-h-9 max-w-[min(260px,100%)] object-contain object-right select-none shrink-0" loading="lazy" decoding="async">
+                <div class="mb-4 flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 rounded-2xl border border-slate-800 bg-slate-950 px-3 sm:px-4 py-3 shadow-sm">
+                    <div class="flex w-full sm:w-[200px] shrink-0 justify-center sm:justify-start order-2 sm:order-1">
+                        <div class="rounded-xl bg-black px-3 sm:px-4 py-2 border border-zinc-900 shadow-inner ring-1 ring-white/5">
+                            <img src="<?= htmlspecialchars($urlLogoProg, ENT_QUOTES, 'UTF-8') ?>" width="200" height="40" alt="Colbeef®" class="h-8 sm:h-9 w-auto max-w-[200px] object-contain object-left select-none" loading="lazy" decoding="async">
+                        </div>
+                    </div>
+                    <div class="flex flex-1 min-w-0 justify-center order-1 sm:order-2 px-2">
+                        <div class="text-center max-w-full">
+                            <span class="block text-base sm:text-lg md:text-[1.35rem] font-black text-white tracking-tight italic leading-tight"><?= htmlspecialchars($tituloProgramacionConFecha, ENT_QUOTES, 'UTF-8') ?></span>
+                            <span class="mt-1 block text-[9px] font-semibold uppercase tracking-widest text-zinc-400"><?= htmlspecialchars($subtituloFechaLinea) ?></span>
+                        </div>
+                    </div>
+                    <div class="hidden sm:flex w-[200px] shrink-0 justify-end order-3 pointer-events-none select-none" aria-hidden="true"></div>
                 </div>
 
             <?php
@@ -613,7 +634,7 @@ $urlLogoProg = is_readable($logoProgAbsPng)
                                     <th class="whitespace-nowrap">F. operación</th>
                                     <th>Hora</th>
                                     <th class="min-w-[90px]">Producto</th>
-                                    <th class="col-t-cuarteo whitespace-nowrap">T. cuarteo</th>
+                                    <th class="col-t-cuarteo">T. cuarteo</th>
                                     <th class="min-w-[54px]">Lote</th>
                                     <th class="text-right min-w-[68px]">Cantidad</th>
                                     <th>Ciudad</th>
@@ -676,7 +697,7 @@ $urlLogoProg = is_readable($logoProgAbsPng)
                                     <td class="font-bold text-slate-900 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Fecha_de_Operacion'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Hora'] ?? '')) ?></td>
                                     <td class="text-slate-800 font-bold uppercase"><?= htmlspecialchars((string) ($r['NomProdDisplay'] ?? '')) ?></td>
-                                    <td class="col-t-cuarteo truncate text-slate-600 text-[10px]" title="<?= htmlspecialchars($tcShow) ?>"><?= htmlspecialchars($tcShow) ?></td>
+                                    <td class="col-t-cuarteo text-slate-700 text-[11px] font-semibold leading-snug" title="<?= htmlspecialchars($tcShow) ?>"><?= htmlspecialchars($tcShow) ?></td>
                                     <td class="min-w-[54px] max-w-[70px] truncate text-slate-600 text-center" title="<?= htmlspecialchars((string) ($r['Lote'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Lote'] ?? '—')) ?></td>
                                     <td class="min-w-[68px] text-right font-bold text-blue-700"><?= $r['Cantidad'] !== null && $r['Cantidad'] !== '' ? number_format((float) $r['Cantidad'], 2) : '' ?></td>
                                     <td class="max-w-[100px] truncate text-slate-600" title="<?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?></td>
@@ -767,7 +788,7 @@ $urlLogoProg = is_readable($logoProgAbsPng)
             f_operacion: '8rem',
             hora: '5rem',
             producto: '9rem',
-            t_cuarteo: '4rem',
+            t_cuarteo: '7.25rem',
             lote: '4.25rem',
             cantidad: '5rem',
             destino: '11rem',

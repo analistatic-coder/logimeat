@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" role="img" aria-label="Colbeef">
-  <!-- Marca textual alineada al estilo institucional (Col verde · beef rojo). -->
-  <text x="12" y="44" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="38" letter-spacing="-0.02em">
-    <tspan fill="#22c55e">Col</tspan><tspan fill="#ef4444">beef</tspan>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 56" role="img" aria-label="Colbeef">
+  <!-- Marca oficial: “Col” verde, “beef” rojo, ® en rojo; peso extra similar a identidad impresa. -->
+  <text x="10" y="40" font-family="system-ui, -apple-system, 'Segoe UI', 'Arial Black', Arial, sans-serif" font-weight="800" font-size="36" letter-spacing="-0.04em">
+    <tspan fill="#00A651">Col</tspan><tspan fill="#DA291C">beef</tspan>
   </text>
-  <text x="262" y="22" fill="#ef4444" font-family="system-ui, sans-serif" font-weight="700" font-size="14">®</text>
+  <text x="234" y="16" fill="#DA291C" font-family="system-ui, sans-serif" font-weight="700" font-size="12">®</text>
 </svg>
