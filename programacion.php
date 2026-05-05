@@ -347,7 +347,7 @@ foreach ($ordenGrupo as $gk) {
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
-        .compact-table th, .compact-table td { padding: 7px 8px !important; font-size: 10px; line-height: 1.25; }
+        .compact-table th, .compact-table td { padding: 5px 6px !important; font-size: 11px; line-height: 1.2; }
         /* Sticky: esquina sup-izq (cód + ID) y acción derecha */
         .compact-table thead th.sticky-l1 {
             position: sticky; left: 0; top: 0; z-index: 35;
@@ -387,9 +387,9 @@ foreach ($ordenGrupo as $gk) {
         .compact-table tbody tr:hover td { background: #f1f5f9 !important; }
         .prog-scroll-outer {
             position: relative;
-            max-height: min(calc(100vh - 13rem), 920px);
+            max-height: min(calc(100vh - 10rem), 960px);
         }
-        .status-pill { padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 8px; }
+        .status-pill { padding: 2px 7px; border-radius: 5px; font-weight: 800; font-size: 9px; }
         .compact-table thead th {
             position: sticky;
             top: 0;
@@ -407,8 +407,8 @@ foreach ($ordenGrupo as $gk) {
 
     <div class="flex-1 flex flex-col ml-64 min-h-screen w-[calc(100%-16rem)] bg-[#f8fafc]">
 
-        <main class="p-8 flex-grow">
-            <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <main class="p-6 flex-grow">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Home › Programación</p>
                     <h2 class="text-3xl font-black text-slate-800 tracking-tight italic">Programación</h2>
@@ -431,7 +431,7 @@ foreach ($ordenGrupo as $gk) {
             </div>
             <?php endif; ?>
 
-            <form method="get" action="programacion.php" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 mb-6 flex flex-col gap-4">
+            <form method="get" action="programacion.php" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 mb-4 flex flex-col gap-3">
                 <div class="flex flex-wrap items-end justify-between gap-4">
                     <div class="flex-1 min-w-[220px] max-w-xl">
                         <label for="buscar" class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Buscar en base de datos (cualquier campo)</label>
@@ -511,16 +511,16 @@ foreach ($ordenGrupo as $gk) {
                     default => ['border-l-amber-500', '⚠️'],
                 };
                 ?>
-            <section class="mb-10">
-                <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-t-[1.5rem] border border-slate-100 border-b-0 shadow-sm <?= $borderPlanta ?> border-l-[6px]">
-                    <span class="text-2xl leading-none"><?= $iconPlanta ?></span>
-                    <span class="text-sm font-black uppercase tracking-tight text-slate-800"><?= htmlspecialchars(mb_strtoupper($titulo)) ?> <span class="text-emerald-600">(<?= $cnt ?>)</span></span>
+            <section class="mb-3">
+                <div class="flex items-center gap-2.5 px-4 py-2 bg-white rounded-t-xl border border-slate-100 border-b-0 shadow-sm <?= $borderPlanta ?> border-l-[6px]">
+                    <span class="text-lg leading-none"><?= $iconPlanta ?></span>
+                    <span class="text-[11px] font-black uppercase tracking-tight text-slate-800"><?= htmlspecialchars(mb_strtoupper($titulo)) ?> <span class="text-emerald-600">(<?= $cnt ?>)</span></span>
             </div>
-                <div class="bg-white rounded-b-[1.5rem] border border-slate-100 border-t-0 overflow-hidden shadow-sm">
+                <div class="bg-white rounded-b-xl border border-slate-100 border-t-0 overflow-hidden shadow-sm">
                     <div class="prog-scroll-outer overflow-x-hidden overflow-y-auto">
                         <table class="w-full text-left compact-table prog-table min-w-full table-fixed border-separate border-spacing-0">
                         <thead>
-                                <tr class="text-slate-500 uppercase font-black tracking-tighter border-b border-slate-200 text-[9px]">
+                                <tr class="text-slate-500 uppercase font-black tracking-tighter border-b border-slate-200 text-[10px]">
                                     <th class="whitespace-nowrap sticky-l1 text-center">Cód.</th>
                                     <th class="whitespace-nowrap sticky-l2">ID prog.</th>
                                     <th class="whitespace-nowrap col-meta">F. registro</th>
@@ -558,7 +558,7 @@ foreach ($ordenGrupo as $gk) {
                             <tbody class="divide-y divide-slate-100">
                                 <?php if ($filasG === []): ?>
                                 <tr>
-                                    <td colspan="32" class="text-center text-slate-400 py-10 text-xs font-semibold uppercase tracking-wide">
+                                    <td colspan="32" class="text-center text-slate-400 py-4 text-[11px] font-semibold uppercase tracking-wide">
                                         Sin programación para esta planta. Use <a href="nueva_programacion.php" class="text-violet-600 underline hover:text-violet-800">nueva programación</a> para registrar.
                                     </td>
                                 </tr>
@@ -590,10 +590,10 @@ foreach ($ordenGrupo as $gk) {
                                     <td class="min-w-[220px] max-w-[360px] whitespace-normal break-words font-medium text-slate-800" title="<?= htmlspecialchars((string) ($r['NomCli'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCli'] ?? $r['Cliente'] ?? '')) ?></td>
                                     <td class="text-slate-500"><?= htmlspecialchars((string) ($r['Planta'] !== null && $r['Planta'] !== '' ? (string) $r['Planta'] : '')) ?></td>
                                     <td class="text-slate-600 max-w-[100px] truncate" title="<?= htmlspecialchars((string) ($r['NomPlantaMaestro'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomPlantaMaestro'] ?? '')) ?></td>
-                                    <td class="font-black text-[8px] uppercase text-slate-600"><?= htmlspecialchars(programacion_etiqueta_planta_grupo($gFila)) ?></td>
+                                    <td class="font-black text-[9px] uppercase text-slate-600"><?= htmlspecialchars(programacion_etiqueta_planta_grupo($gFila)) ?></td>
                                     <td>
                                         <span class="mr-1"><?= $ic ?></span>
-                                        <span class="<?= $actClass ?> font-black uppercase text-[8px]"><?= htmlspecialchars($nomAct) ?></span>
+                                        <span class="<?= $actClass ?> font-black uppercase text-[9px]"><?= htmlspecialchars($nomAct) ?></span>
                                 </td>
                                     <td class="font-bold text-slate-900 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Fecha_de_Operacion'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Hora'] ?? '')) ?></td>
@@ -604,10 +604,10 @@ foreach ($ordenGrupo as $gk) {
                                     <td class="max-w-[100px] truncate text-slate-600" title="<?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?></td>
                                     <td class="max-w-[140px] truncate text-slate-700" title="<?= htmlspecialchars((string) ($r['Destino'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Destino'] ?? '')) ?></td>
                                     <td class="max-w-[100px] truncate text-slate-600" title="<?= htmlspecialchars((string) ($r['Ubicacion'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Ubicacion'] ?? '')) ?></td>
-                                    <td class="max-w-[100px] truncate text-slate-600 text-[8px]" title="<?= htmlspecialchars($oplShow) ?>"><?= htmlspecialchars($oplShow) ?></td>
+                                    <td class="max-w-[100px] truncate text-slate-600 text-[9px]" title="<?= htmlspecialchars($oplShow) ?>"><?= htmlspecialchars($oplShow) ?></td>
                                     <td class="max-w-[110px] truncate text-slate-700" title="<?= htmlspecialchars($condShow) ?>"><?= htmlspecialchars($condShow) ?></td>
                                     <td class="font-black text-slate-800 uppercase whitespace-nowrap"><?= htmlspecialchars($vehDisplay !== '' ? $vehDisplay : '—') ?></td>
-                                    <td class="min-w-[360px] max-w-[560px] whitespace-normal break-words text-slate-500 text-[8px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
+                                    <td class="min-w-[360px] max-w-[560px] whitespace-normal break-words text-slate-500 text-[10px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Cantidad_Correcta'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Producto_Correcto'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Entrega_a_Tiempo'] ?? '')) ?></td>
