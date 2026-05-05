@@ -2,16 +2,22 @@
 require_once 'auth.php'; 
 require_once 'conexion.php';
 
+// Mostrar dashboard solo desde la fecha de reinicio operativo.
+$fechaCorte = '2026-04-30';
+$fechaIsoExpr = "CONCAT(SUBSTRING(p.Fecha_de_Operacion, 7, 4), '-', SUBSTRING(p.Fecha_de_Operacion, 4, 2), '-', SUBSTRING(p.Fecha_de_Operacion, 1, 2))";
+$whereFechaCorte = "p.Fecha_de_Operacion REGEXP '^[0-9]{2}/[0-9]{2}/[0-9]{4}$' AND $fechaIsoExpr >= '$fechaCorte'";
+
 // 1. CONSULTAS PARA INDICADORES SUPERIORES (KPIs)
-$total_kg = $pdo->query("SELECT SUM(Cantidad) FROM Programacion")->fetchColumn() ?: 0;
-$total_prog = $pdo->query("SELECT COUNT(*) FROM Programacion")->fetchColumn() ?: 0;
-$ejecutados = $pdo->query("SELECT COUNT(*) FROM Programacion WHERE Estado_Actividad = 'EJECUTADO'")->fetchColumn() ?: 0;
+$total_kg = $pdo->query("SELECT COALESCE(SUM(p.Cantidad),0) FROM Programacion p WHERE $whereFechaCorte")->fetchColumn() ?: 0;
+$total_prog = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte")->fetchColumn() ?: 0;
+$ejecutados = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'EJECUTADO'")->fetchColumn() ?: 0;
 $otif_perc = ($total_prog > 0) ? round(($ejecutados / $total_prog) * 100, 1) : 0;
 
 // 2. DATOS PARA GRÁFICA: VOLUMEN POR PLANTA
 $sql_planta = "SELECT pl.Planta, SUM(p.Cantidad) as total_kg 
                FROM Programacion p 
                JOIN Planta pl ON p.Planta = pl.ID_Planta 
+               WHERE $whereFechaCorte
                GROUP BY pl.Planta";
 $res_planta = $pdo->query($sql_planta)->fetchAll(PDO::FETCH_ASSOC);
 
@@ -19,19 +25,21 @@ $res_planta = $pdo->query($sql_planta)->fetchAll(PDO::FETCH_ASSOC);
 $sql_clientes = "SELECT c.Cliente, SUM(p.Cantidad) as kg 
                  FROM Programacion p 
                  JOIN Clientes c ON p.Cliente = c.ID_Cliente 
+                 WHERE $whereFechaCorte
                  GROUP BY c.Cliente ORDER BY kg DESC LIMIT 5";
 $res_clientes = $pdo->query($sql_clientes)->fetchAll(PDO::FETCH_ASSOC);
 
 // 4. DATOS PARA GRÁFICA DE TORTA: ESTADOS DE ACTIVIDAD
-$cont_ejecutado = $pdo->query("SELECT COUNT(*) FROM Programacion WHERE Estado_Actividad = 'EJECUTADO'")->fetchColumn() ?: 0;
-$cont_programado = $pdo->query("SELECT COUNT(*) FROM Programacion WHERE Estado_Actividad = 'PROGRAMADO'")->fetchColumn() ?: 0;
-$cont_cancelado = $pdo->query("SELECT COUNT(*) FROM Programacion WHERE Estado_Actividad = 'CANCELADO'")->fetchColumn() ?: 0;
+$cont_ejecutado = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'EJECUTADO'")->fetchColumn() ?: 0;
+$cont_programado = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'PROGRAMADO'")->fetchColumn() ?: 0;
+$cont_cancelado = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'CANCELADO'")->fetchColumn() ?: 0;
 
 // 5. DATOS PARA GRÁFICA: TENDENCIA DIARIA (Últimos 7 días)
-$sql_trend = "SELECT Fecha_de_Operacion, SUM(Cantidad) as kg 
-              FROM Programacion 
-              GROUP BY Fecha_de_Operacion 
-              ORDER BY STR_TO_DATE(Fecha_de_Operacion, '%d/%m/%Y') DESC LIMIT 7";
+$sql_trend = "SELECT p.Fecha_de_Operacion, SUM(p.Cantidad) as kg 
+              FROM Programacion p
+              WHERE $whereFechaCorte
+              GROUP BY p.Fecha_de_Operacion 
+              ORDER BY $fechaIsoExpr DESC LIMIT 7";
 $res_trend = array_reverse($pdo->query($sql_trend)->fetchAll(PDO::FETCH_ASSOC));
 ?>
 <!DOCTYPE html>
