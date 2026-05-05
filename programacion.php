@@ -67,6 +67,61 @@ function programacion_blob_busqueda_local(array $r): string
     return mb_strtoupper(implode(' ', $parts), 'UTF-8');
 }
 
+/**
+ * Texto de fechas para el encabezado: filtros aplicados o rango mínimo/máximo de las filas visibles por planta.
+ */
+function programacion_subtitulo_fechas_visibles(array $ordenGrupo, array $grupos, string $desde, string $hasta): string
+{
+    if ($desde !== '' && $hasta !== '') {
+        try {
+            $d1 = (new DateTimeImmutable($desde))->format('d/m/Y');
+            $d2 = (new DateTimeImmutable($hasta))->format('d/m/Y');
+
+            return $d1 === $d2 ? $d1 : $d1 . ' — ' . $d2;
+        } catch (Throwable) {
+            // siguiente criterio
+        }
+    }
+
+    $tsMin = null;
+    $tsMax = null;
+    foreach ($ordenGrupo as $gk) {
+        foreach (($grupos[$gk] ?? []) as $rw) {
+            $f = trim((string) ($rw['Fecha_de_Operacion'] ?? ''));
+            if ($f === '' || !preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $f)) {
+                continue;
+            }
+            $p = explode('/', $f);
+            if (count($p) !== 3) {
+                continue;
+            }
+            $dia = str_pad((string) (int) $p[0], 2, '0', STR_PAD_LEFT);
+            $mes = str_pad((string) (int) $p[1], 2, '0', STR_PAD_LEFT);
+            $anio = (string) (int) $p[2];
+            $iso = $anio . '-' . $mes . '-' . $dia;
+            $ts = strtotime($iso);
+            if ($ts === false) {
+                continue;
+            }
+            if ($tsMin === null || $ts < $tsMin) {
+                $tsMin = $ts;
+            }
+            if ($tsMax === null || $ts > $tsMax) {
+                $tsMax = $ts;
+            }
+        }
+    }
+
+    if ($tsMin !== null && $tsMax !== null) {
+        $f1 = date('d/m/Y', $tsMin);
+        $f2 = date('d/m/Y', $tsMax);
+
+        return $f1 === $f2 ? $f1 : $f1 . ' — ' . $f2;
+    }
+
+    return (new DateTimeImmutable('today'))->format('d/m/Y');
+}
+
 $sqlJoins = '
         LEFT JOIN Clientes c
             ON CAST(p.Cliente AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
@@ -337,12 +392,24 @@ foreach ($ordenGrupo as $gk) {
     }
 }
 
+$fechaVistaTitulo = programacion_subtitulo_fechas_visibles($ordenGrupo, $grupos, $desde, $hasta);
+$hayFiltroFechas = ($desde !== '' && $hasta !== '');
+$subtituloFechaLinea = $hayFiltroFechas
+    ? ('Período filtrado: ' . $fechaVistaTitulo)
+    : ('Fechas de operación en pantalla: ' . $fechaVistaTitulo);
+
+$logoProgAbsSvg = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'colbeef-logo.svg';
+$logoProgAbsPng = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'colbeef-logo.png';
+$urlLogoProg = is_readable($logoProgAbsPng)
+    ? 'assets/colbeef-logo.png?v=' . (string) (@filemtime($logoProgAbsPng) ?: 1)
+    : 'assets/colbeef-logo.svg?v=' . (string) (@filemtime($logoProgAbsSvg) ?: 1);
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LogiMeat | Programación</title>
+    <title>LogiMeat | Programación logística <?= htmlspecialchars('(' . $fechaVistaTitulo . ')') ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -393,6 +460,7 @@ foreach ($ordenGrupo as $gk) {
         }
         /* Sin sombra interior: menos “hueco” visual entre grupos */
         .prog-card-planta { box-shadow: none; }
+        .col-t-cuarteo { width: 3.75rem !important; max-width: 4.25rem !important; min-width: 3.25rem !important; }
         .status-pill { padding: 1px 6px; border-radius: 4px; font-weight: 800; font-size: 10px; }
         .compact-table thead th {
             position: sticky;
@@ -414,9 +482,10 @@ foreach ($ordenGrupo as $gk) {
         <main class="p-6 flex-grow">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Home › Programación</p>
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tight italic">Programación</h2>
-                    <p class="text-slate-500 text-sm mt-1">Cada registro tiene su <span class="font-bold text-slate-700">planta asignada</span> (Beneficio / Desposte / Celfrio). Destino, observaciones, OPL y vehículo son datos aparte.</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Home › Programación logística</p>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight italic">Programación logística</h2>
+                    <p class="text-slate-600 text-sm font-bold mt-1"><?= htmlspecialchars($subtituloFechaLinea) ?></p>
+                    <p class="text-slate-500 text-xs mt-1.5 leading-snug">Cada registro tiene su <span class="font-bold text-slate-700">planta asignada</span> (Beneficio / Desposte / Subproductos / Celfrio). Destino, observaciones, OPL y vehículo son datos aparte.</p>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center">
                     <a href="nueva_programacion.php" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] shadow-lg uppercase tracking-widest hover:bg-emerald-500">+ Nueva</a>
@@ -498,6 +567,11 @@ foreach ($ordenGrupo as $gk) {
                 <?php endif; ?>
                 </form>
 
+                <div class="mb-4 flex flex-wrap items-center justify-end gap-4 rounded-2xl border border-slate-200 bg-slate-950 px-4 py-3 shadow-sm">
+                    <div class="mr-auto text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden sm:block">Colbeef SAS</div>
+                    <img src="<?= htmlspecialchars($urlLogoProg, ENT_QUOTES, 'UTF-8') ?>" width="220" height="44" alt="Colbeef®" class="h-9 w-auto max-h-9 max-w-[min(260px,100%)] object-contain object-right select-none shrink-0" loading="lazy" decoding="async">
+                </div>
+
             <?php
             foreach ($ordenGrupo as $gkey):
                 $filasG = $grupos[$gkey] ?? [];
@@ -531,7 +605,7 @@ foreach ($ordenGrupo as $gk) {
                                     <th class="min-w-[100px] col-meta">Solicitante</th>
                                     <th class="col-meta">Medio</th>
                                     <th>Estado pedido</th>
-                                    <th class="min-w-[220px]">Cliente</th>
+                                    <th class="min-w-[260px] max-w-none">Cliente</th>
                                     <th>Nº planta</th>
                                     <th>Planta (nombre)</th>
                                     <th>Planta op.</th>
@@ -539,7 +613,7 @@ foreach ($ordenGrupo as $gk) {
                                     <th class="whitespace-nowrap">F. operación</th>
                                     <th>Hora</th>
                                     <th class="min-w-[90px]">Producto</th>
-                                    <th class="min-w-[72px]">T. cuarteo</th>
+                                    <th class="col-t-cuarteo whitespace-nowrap">T. cuarteo</th>
                                     <th class="min-w-[54px]">Lote</th>
                                     <th class="text-right min-w-[68px]">Cantidad</th>
                                     <th>Ciudad</th>
@@ -548,7 +622,7 @@ foreach ($ordenGrupo as $gk) {
                                     <th>OPL</th>
                                     <th>Conductor</th>
                                     <th>Vehículo</th>
-                                    <th class="min-w-[360px]">Observaciones</th>
+                                    <th class="min-w-[28rem] max-w-none">Observaciones</th>
                                     <th class="col-calidad">Cant. OK</th>
                                     <th class="col-calidad">Prod. OK</th>
                                     <th class="col-calidad">Entr. tiempo</th>
@@ -591,7 +665,7 @@ foreach ($ordenGrupo as $gk) {
                                     <td class="max-w-[140px] truncate text-slate-700 col-meta" title="<?= htmlspecialchars((string) ($r['NomSolicitante'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomSolicitante'] ?? '')) ?></td>
                                     <td class="max-w-[90px] truncate col-meta" title="<?= htmlspecialchars((string) ($r['NomMedioCom'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomMedioCom'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Estado'] ?? '')) ?></td>
-                                    <td class="min-w-[220px] max-w-[360px] whitespace-normal break-words font-medium text-slate-800" title="<?= htmlspecialchars((string) ($r['NomCli'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCli'] ?? $r['Cliente'] ?? '')) ?></td>
+                                    <td class="min-w-[260px] max-w-[520px] whitespace-normal break-words font-medium text-slate-800" title="<?= htmlspecialchars((string) ($r['NomCli'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCli'] ?? $r['Cliente'] ?? '')) ?></td>
                                     <td class="text-slate-500"><?= htmlspecialchars((string) ($r['Planta'] !== null && $r['Planta'] !== '' ? (string) $r['Planta'] : '')) ?></td>
                                     <td class="text-slate-600 max-w-[100px] truncate" title="<?= htmlspecialchars((string) ($r['NomPlantaMaestro'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomPlantaMaestro'] ?? '')) ?></td>
                                     <td class="font-black text-[10px] uppercase text-slate-600"><?= htmlspecialchars(programacion_etiqueta_planta_grupo($gFila)) ?></td>
@@ -602,7 +676,7 @@ foreach ($ordenGrupo as $gk) {
                                     <td class="font-bold text-slate-900 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Fecha_de_Operacion'] ?? '')) ?></td>
                                     <td class="text-slate-600"><?= htmlspecialchars((string) ($r['Hora'] ?? '')) ?></td>
                                     <td class="text-slate-800 font-bold uppercase"><?= htmlspecialchars((string) ($r['NomProdDisplay'] ?? '')) ?></td>
-                                    <td class="min-w-[72px] max-w-[90px] truncate text-slate-600" title="<?= htmlspecialchars($tcShow) ?>"><?= htmlspecialchars($tcShow) ?></td>
+                                    <td class="col-t-cuarteo truncate text-slate-600 text-[10px]" title="<?= htmlspecialchars($tcShow) ?>"><?= htmlspecialchars($tcShow) ?></td>
                                     <td class="min-w-[54px] max-w-[70px] truncate text-slate-600 text-center" title="<?= htmlspecialchars((string) ($r['Lote'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Lote'] ?? '—')) ?></td>
                                     <td class="min-w-[68px] text-right font-bold text-blue-700"><?= $r['Cantidad'] !== null && $r['Cantidad'] !== '' ? number_format((float) $r['Cantidad'], 2) : '' ?></td>
                                     <td class="max-w-[100px] truncate text-slate-600" title="<?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['NomCiudad'] ?? '')) ?></td>
@@ -611,7 +685,7 @@ foreach ($ordenGrupo as $gk) {
                                     <td class="max-w-[100px] truncate text-slate-600 text-[10px]" title="<?= htmlspecialchars($oplShow) ?>"><?= htmlspecialchars($oplShow) ?></td>
                                     <td class="max-w-[110px] truncate text-slate-700" title="<?= htmlspecialchars($condShow) ?>"><?= htmlspecialchars($condShow) ?></td>
                                     <td class="font-black text-slate-800 uppercase whitespace-nowrap"><?= htmlspecialchars($vehDisplay !== '' ? $vehDisplay : '—') ?></td>
-                                    <td class="min-w-[360px] max-w-[560px] whitespace-normal break-words text-slate-500 text-[11px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
+                                    <td class="min-w-[28rem] max-w-[40rem] whitespace-normal break-words text-slate-500 text-[11px]" title="<?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?>"><?= htmlspecialchars((string) ($r['Observaciones'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Cantidad_Correcta'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Producto_Correcto'] ?? '')) ?></td>
                                     <td class="text-slate-500 col-calidad"><?= htmlspecialchars((string) ($r['Entrega_a_Tiempo'] ?? '')) ?></td>
@@ -688,18 +762,18 @@ foreach ($ordenGrupo as $gk) {
             telefono: false
         };
         var _columnWidths = {
-            cliente: '22rem',
+            cliente: '28rem',
             actividad: '10rem',
             f_operacion: '8rem',
             hora: '5rem',
             producto: '9rem',
-            t_cuarteo: '5.5rem',
+            t_cuarteo: '4rem',
             lote: '4.25rem',
             cantidad: '5rem',
             destino: '11rem',
             conductor: '10rem',
             vehiculo: '8rem',
-            obs: '36rem'
+            obs: '44rem'
         };
         var _columnDefs = [
             { i: 1, key: 'codigo', label: 'Cód.' },
