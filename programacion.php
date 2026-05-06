@@ -603,7 +603,6 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
                     <div class="flex flex-1 min-w-0 justify-center order-1 sm:order-2 px-2">
                         <div class="text-center max-w-full">
                             <span class="block text-base sm:text-lg md:text-[1.35rem] font-black text-white tracking-tight italic leading-tight"><?= htmlspecialchars($tituloProgramacionConFecha, ENT_QUOTES, 'UTF-8') ?></span>
-                            <span class="mt-1.5 block text-[9px] font-semibold tracking-wide text-zinc-400">Las filas de la tabla muestran otras fechas según filtros y reglas de prioridad (mañana, último día cargado…).</span>
                         </div>
                     </div>
                     <div class="hidden sm:flex w-[200px] shrink-0 justify-end order-3 pointer-events-none select-none" aria-hidden="true"></div>

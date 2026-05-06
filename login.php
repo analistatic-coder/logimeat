@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['rol'] = $rolRaw !== '' ? $rolRaw : 'Operativo';
         }
         $_SESSION['ultima_actividad'] = time();
-        lm_usabilidad_registrar_login($pdo, (int) $usuario['ID_User'], (string) ($_SESSION['rol'] ?? ''));
+        lm_usabilidad_registrar_login($pdo, $usuario['ID_User'], (string) ($_SESSION['rol'] ?? ''));
         header('Location: index.php');
         exit();
     } else {

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS app_usabilidad_evento (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   tipo ENUM('login','pagina') NOT NULL,
   modulo VARCHAR(96) NOT NULL,
-  id_user INT NULL,
+  id_user VARCHAR(64) NULL,
   rol VARCHAR(80) NULL,
   ip VARCHAR(45) NULL,
   user_agent VARCHAR(255) NULL,

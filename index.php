@@ -2,10 +2,17 @@
 require_once 'auth.php'; 
 require_once 'conexion.php';
 
-// Mostrar dashboard solo desde la fecha de reinicio operativo.
+// Mostrar dashboard solo desde la fecha de reinicio operativo (programación como si empezara este día).
 $fechaCorte = '2026-04-30';
 $fechaIsoExpr = "CONCAT(SUBSTRING(p.Fecha_de_Operacion, 7, 4), '-', SUBSTRING(p.Fecha_de_Operacion, 4, 2), '-', SUBSTRING(p.Fecha_de_Operacion, 1, 2))";
 $whereFechaCorte = "p.Fecha_de_Operacion REGEXP '^[0-9]{2}/[0-9]{2}/[0-9]{4}$' AND $fechaIsoExpr >= '$fechaCorte'";
+$fechaCorteUi = DateTimeImmutable::createFromFormat('Y-m-d', $fechaCorte);
+$fechaCorteLarga = $fechaCorteUi
+    ? $fechaCorteUi->format('d') . ' de ' . [
+        '01' => 'enero', '02' => 'febrero', '03' => 'marzo', '04' => 'abril', '05' => 'mayo', '06' => 'junio',
+        '07' => 'julio', '08' => 'agosto', '09' => 'septiembre', '10' => 'octubre', '11' => 'noviembre', '12' => 'diciembre',
+    ][$fechaCorteUi->format('m')] . ' de ' . $fechaCorteUi->format('Y')
+    : $fechaCorte;
 
 // 1. CONSULTAS PARA INDICADORES SUPERIORES (KPIs)
 $total_kg = $pdo->query("SELECT COALESCE(SUM(p.Cantidad),0) FROM Programacion p WHERE $whereFechaCorte")->fetchColumn() ?: 0;
@@ -33,6 +40,9 @@ $res_clientes = $pdo->query($sql_clientes)->fetchAll(PDO::FETCH_ASSOC);
 $cont_ejecutado = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'EJECUTADO'")->fetchColumn() ?: 0;
 $cont_programado = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'PROGRAMADO'")->fetchColumn() ?: 0;
 $cont_cancelado = $pdo->query("SELECT COUNT(*) FROM Programacion p WHERE $whereFechaCorte AND p.Estado_Actividad = 'CANCELADO'")->fetchColumn() ?: 0;
+$cumplimiento_perc = ($total_prog > 0)
+    ? round((($cont_ejecutado + $cont_programado) / $total_prog) * 100, 1)
+    : 0;
 
 // 5. DATOS PARA GRÁFICA: TENDENCIA DIARIA (Últimos 7 días)
 $sql_trend = "SELECT p.Fecha_de_Operacion, SUM(p.Cantidad) as kg 
@@ -66,6 +76,7 @@ $res_trend = array_reverse($pdo->query($sql_trend)->fetchAll(PDO::FETCH_ASSOC));
                 <div>
                     <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">Panel de Control</h1>
                     <p class="text-slate-500 font-medium italic">Resumen general de la operación logística.</p>
+                    <p class="text-slate-400 text-sm mt-1">Indicadores y gráficos desde el <?= htmlspecialchars($fechaCorteLarga, ENT_QUOTES, 'UTF-8') ?> (inclusive).</p>
                 </div>
                 <div class="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm text-center">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Estado del Sistema</span>
@@ -90,7 +101,7 @@ $res_trend = array_reverse($pdo->query($sql_trend)->fetchAll(PDO::FETCH_ASSOC));
                 </div>
                 <div class="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-50">
                     <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2">Cumplimiento</p>
-                    <h3 class="text-3xl font-black text-emerald-500">96.8%</h3>
+                    <h3 class="text-3xl font-black text-emerald-500"><?= $cumplimiento_perc ?>%</h3>
                 </div>
             </div>
 
