@@ -4,8 +4,10 @@ declare(strict_types=1);
 /**
  * Envío de correo: SMTP (recomendado en servidor / dominio corporativo) o mail() de PHP.
  *
- * Configuración en conexion.local.php (ver conexion.local.example.php):
- * mail_from, mail_from_name, smtp_host, smtp_port, smtp_encryption, smtp_user, smtp_pass
+ * conexion.local.php: smtp_host, smtp_port, smtp_encryption (ssl|tls|''), smtp_user, smtp_pass,
+ * mail_from, mail_from_name. Alias: from_email, from_name, smtp_username, username, password
+ * (password solo si smtp_pass está vacío; no use la clave "host" para el SMTP en este mismo
+ * array: chocaría con la base de datos — usar siempre smtp_host).
  */
 
 if (!function_exists('lm_mail_app_config')) {
@@ -65,8 +67,11 @@ if (!function_exists('lm_mail_send_smtp')) {
         $host = trim((string) ($c['smtp_host'] ?? ''));
         $port = (int) ($c['smtp_port'] ?? 587);
         $enc = strtolower(trim((string) ($c['smtp_encryption'] ?? 'tls')));
-        $user = trim((string) ($c['smtp_user'] ?? $c['smtp_username'] ?? ''));
+        $user = trim((string) ($c['smtp_user'] ?? $c['smtp_username'] ?? $c['username'] ?? ''));
         $pass = (string) ($c['smtp_pass'] ?? '');
+        if ($pass === '' && isset($c['password']) && (string) $c['password'] !== '') {
+            $pass = (string) $c['password'];
+        }
 
         if ($host === '') {
             throw new RuntimeException('smtp_host no configurado');
