@@ -66,9 +66,7 @@ foreach($registros as $e){
 <head>
     <meta charset="UTF-8">
     <title>LogiMeat | Calendario</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php lm_head_local_assets(['fullcalendar' => true]); ?>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         /* Ajustes para FullCalendar */

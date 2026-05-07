@@ -424,8 +424,7 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
 <head>
     <meta charset="UTF-8">
     <title>LogiMeat | <?= htmlspecialchars($tituloProgramacionConFecha, ENT_QUOTES, 'UTF-8') ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <?php lm_head_local_assets(); ?>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
         .compact-table th, .compact-table td { padding: 4px 5px !important; font-size: 12px; line-height: 1.2; }

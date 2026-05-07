@@ -38,9 +38,7 @@ foreach($rels_raw as $r) {
 <head>
     <meta charset="UTF-8">
     <title>LogiMeat | Conductores / Vehículos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php lm_head_local_assets(['chart' => true]); ?>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .custom-scroll::-webkit-scrollbar { width: 5px; }

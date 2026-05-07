@@ -2,6 +2,7 @@
 session_start();
 require_once 'conexion.php';
 require_once __DIR__ . '/config/usabilidad_log.php';
+require_once __DIR__ . '/config/lm_assets.php';
 
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
@@ -46,8 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>LogiMeat | Acceso</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php lm_head_local_assets(); ?>
 </head>
 <body class="bg-slate-900 flex flex-col items-center justify-center min-h-screen font-['Plus_Jakarta_Sans']">
     <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100">

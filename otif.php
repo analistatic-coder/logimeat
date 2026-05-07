@@ -15,9 +15,7 @@ $perc_completo = ($total > 0) ? 98 : 0;
 <head>
     <meta charset="UTF-8">
     <title>LogiMeat | Calidad del Servicio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <?php lm_head_local_assets(['chart' => true]); ?>
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }</style>
 </head>
 <body class="flex min-h-screen">

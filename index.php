@@ -57,9 +57,7 @@ $res_trend = array_reverse($pdo->query($sql_trend)->fetchAll(PDO::FETCH_ASSOC));
 <head>
     <meta charset="UTF-8">
     <title>LogiMeat | Dashboard Operativo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <?php lm_head_local_assets(['chart' => true]); ?>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .card-shadow { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 10px 10px -5px rgba(0, 0, 0, 0.02); }

@@ -1,1 +1,5 @@
 conexion.local.php
+
+# Solo para regenerar CSS Tailwind en desarrollo (muy pesado)
+assets/vendor/tailwindcss.exe
+assets/vendor/plus-jakarta-google.css

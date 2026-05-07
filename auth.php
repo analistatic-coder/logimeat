@@ -4,6 +4,8 @@ lm_seguridad_session_before_start();
 session_start();
 lm_seguridad_headers_enviar();
 
+require_once __DIR__ . '/config/lm_assets.php';
+
 function lm_rol_actual(): string
 {
     return trim((string) ($_SESSION['rol'] ?? 'Operativo'));
