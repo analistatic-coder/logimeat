@@ -4,10 +4,12 @@ declare(strict_types=1);
 /**
  * Rutas a CSS/JS servidos desde el propio servidor (sin CDN) para uso sin internet.
  *
- * Regenerar tailwind-built.css (tras añadir clases Tailwind nuevas): ejecutable standalone v3.4.x
- * desde https://github.com/tailwindlabs/tailwindcss/releases — por ejemplo:
- * tailwindcss.exe -i assets/vendor/tailwind-source.css -o assets/vendor/tailwind-built.css --minify --content "**/*.php"
+ * Regenerar tailwind-built.css (tras añadir clases Tailwind): ejecutable standalone v3.4.x desde
+ * https://github.com/tailwindlabs/tailwindcss/releases — comando con globs recursivos de archivos .php
+ * en la raíz del proyecto (ver comentarios en el repo; evitar * y barra juntos en bloques DocBlock).
  */
+// Rebuild Tailwind (ejemplo): tailwindcss.exe -i assets/vendor/tailwind-source.css -o assets/vendor/tailwind-built.css --minify --content "**/*.php"
+
 if (!function_exists('lm_asset_web_prefix')) {
     function lm_asset_web_prefix(): string
     {
