@@ -89,6 +89,33 @@ if (!function_exists('lm_asset_href')) {
     }
 }
 
+if (!function_exists('lm_public_root_url')) {
+    /** URL base pública de la aplicación (sin barra final), para enlaces en correo. */
+    function lm_public_root_url(): string
+    {
+        $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $scheme = $https ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $base = lm_app_base_path();
+        if ($base === '') {
+            return $scheme . '://' . $host;
+        }
+
+        return $scheme . '://' . $host . '/' . $base;
+    }
+}
+
+if (!function_exists('lm_public_page_url')) {
+    /** URL absoluta a un script PHP en la raíz de la app (p. ej. password_reset_confirm.php). */
+    function lm_public_page_url(string $scriptPath): string
+    {
+        $scriptPath = ltrim(str_replace('\\', '/', $scriptPath), '/');
+        $root = rtrim(lm_public_root_url(), '/');
+
+        return $root . '/' . $scriptPath;
+    }
+}
+
 if (!function_exists('lm_head_local_assets')) {
     /**
      * @param array{chart?: bool, fullcalendar?: bool} $extra

@@ -60,11 +60,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?= htmlspecialchars($error ?: 'Sesión caducada por inactividad', ENT_QUOTES, 'UTF-8') ?>
             </div>
         <?php endif; ?>
+        <?php if (isset($_GET['msg']) && $_GET['msg'] === 'pass_reset_ok'): ?>
+            <div class="bg-emerald-50 text-emerald-800 p-4 rounded-2xl text-[10px] font-bold mb-6 text-center border border-emerald-100 uppercase">
+                Contraseña actualizada. Inicie sesión con la nueva clave.
+            </div>
+        <?php endif; ?>
         <form method="POST" class="space-y-5">
             <input type="text" name="usuario" placeholder="USUARIO" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm font-bold">
             <input type="password" name="clave" placeholder="CONTRASEÑA" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
             <button type="submit" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-bold hover:bg-blue-700 transition-all uppercase text-xs tracking-widest">Ingresar</button>
         </form>
+        <p class="mt-4 text-center">
+            <a href="password_reset_request.php" class="text-[11px] font-black text-blue-600 uppercase tracking-widest hover:underline">
+                ¿Olvidó su contraseña?
+            </a>
+        </p>
         <a href="http://192.168.20.205:8000/site.html" class="mt-4 w-full inline-flex items-center justify-center p-4 rounded-2xl bg-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
             Volver a WORKBEEF
         </a>
