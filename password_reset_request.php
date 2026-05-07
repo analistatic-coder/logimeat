@@ -8,6 +8,7 @@ session_start();
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/config/lm_assets.php';
 require_once __DIR__ . '/config/password_reset_helpers.php';
+require_once __DIR__ . '/config/mail_send.php';
 
 lm_password_reset_ensure_schema($pdo);
 
@@ -42,15 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ins->execute([$userId, $token, $expiresAt]);
 
                 $link = lm_public_page_url('password_reset_confirm.php?token=' . urlencode($token));
-                $subject = 'LogiMeat — Restablecer contraseña';
+                $subject = 'LogiMeat: restablecer contraseña';
                 $body = "Hola {$nombre},\r\n\r\n"
                     . "Se solicitó restablecer la contraseña de LogiMeat.\r\n\r\n"
                     . "Abra este enlace en el navegador (caduca en 45 minutos):\r\n"
                     . "{$link}\r\n\r\n"
                     . "Si usted no lo solicitó, ignore este mensaje.\r\n";
-                $headers = "Content-Type: text/plain; charset=UTF-8\r\n";
 
-                @mail($email, $subject, $body, $headers);
+                $sent = lm_mail_send_app($email, $subject, $body);
+                if (!$sent['ok']) {
+                    error_log('LogiMeat password reset mail error: ' . ($sent['error'] ?? ''));
+                }
 
                 $mensaje = $mensajeGenerico;
             }

@@ -52,6 +52,8 @@ try {
     exit('Error de conexión a la base de datos.');
 }
 
+$GLOBALS['_lm_app_config'] = $config;
+
 if (PHP_SAPI !== 'cli' && isset($pdo) && $pdo instanceof PDO) {
     if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id'])) {
         require_once __DIR__ . '/config/usabilidad_log.php';
