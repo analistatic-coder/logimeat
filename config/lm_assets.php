@@ -10,17 +10,71 @@ declare(strict_types=1);
  */
 // Rebuild Tailwind (ejemplo): tailwindcss.exe -i assets/vendor/tailwind-source.css -o assets/vendor/tailwind-built.css --minify --content "**/*.php"
 
-if (!function_exists('lm_asset_web_prefix')) {
-    function lm_asset_web_prefix(): string
+if (!function_exists('lm_app_base_path')) {
+    /**
+     * Segmento de URL entre el host y los archivos estáticos (sin slashes extremos).
+     * Vacío si la app está en la raíz del virtual host.
+     * Forzar: constante LM_WEB_BASE o clave web_base en conexion.local.php.
+     */
+    function lm_app_base_path(): string
     {
-        $script = $_SERVER['SCRIPT_NAME'] ?? '';
-        $script = str_replace('\\', '/', (string) $script);
-        $dir = dirname($script);
-        if ($dir === '/' || $dir === '.' || $dir === '') {
-            return '';
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
         }
 
-        return rtrim($dir, '/');
+        if (defined('LM_WEB_BASE')) {
+            $cached = trim((string) LM_WEB_BASE, '/');
+
+            return $cached;
+        }
+
+        $envBase = getenv('LM_WEB_BASE');
+        if ($envBase !== false && $envBase !== '') {
+            $cached = trim($envBase, '/');
+
+            return $cached;
+        }
+
+        $localPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'conexion.local.php';
+        if (is_readable($localPath)) {
+            $local = require $localPath;
+            if (is_array($local) && isset($local['web_base']) && trim((string) $local['web_base']) !== '') {
+                $cached = trim((string) $local['web_base'], '/');
+
+                return $cached;
+            }
+        }
+
+        $doc = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        $docReal = ($doc !== '' && is_dir($doc)) ? realpath($doc) : false;
+        $appRoot = dirname(__DIR__);
+        $appReal = is_dir($appRoot) ? realpath($appRoot) : false;
+
+        if ($docReal !== false && $appReal !== false) {
+            $docN = str_replace('\\', '/', $docReal);
+            $appN = str_replace('\\', '/', $appReal);
+            if (str_starts_with($appN, $docN)) {
+                $rel = substr($appN, strlen($docN));
+                $rel = trim(str_replace('\\', '/', $rel), '/');
+                $cached = $rel;
+
+                return $cached;
+            }
+        }
+
+        $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($script !== '' && $script[0] !== '/') {
+            $script = '/' . $script;
+        }
+        $dir = dirname($script === '' ? '/' : $script);
+        if ($dir === '/' || $dir === '.' || $dir === '\\') {
+            $cached = '';
+        } else {
+            $cached = trim($dir, '/');
+        }
+
+        return $cached;
     }
 }
 
@@ -28,9 +82,10 @@ if (!function_exists('lm_asset_href')) {
     function lm_asset_href(string $path): string
     {
         $path = ltrim(str_replace('\\', '/', $path), '/');
-        $prefix = lm_asset_web_prefix();
+        $base = lm_app_base_path();
+        $url = ($base === '') ? '/' . $path : '/' . $base . '/' . $path;
 
-        return ($prefix === '' ? '' : $prefix . '/') . $path;
+        return preg_replace('#/+#', '/', $url);
     }
 }
 

@@ -12,4 +12,7 @@ return [
     'pass' => 'root',
     'port' => 3306,
     'charset' => 'utf8mb4',
+    // Opcional: si la app vive en una subcarpeta del DocumentRoot (p. ej. www/logimeat),
+    // poner el segmento de URL aquí para que CSS/JS carguen bien (ej. 'logimeat').
+    // 'web_base' => 'logimeat',
 ];
