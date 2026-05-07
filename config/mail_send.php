@@ -65,17 +65,26 @@ if (!function_exists('lm_mail_send_smtp')) {
         $host = trim((string) ($c['smtp_host'] ?? ''));
         $port = (int) ($c['smtp_port'] ?? 587);
         $enc = strtolower(trim((string) ($c['smtp_encryption'] ?? 'tls')));
-        $user = (string) ($c['smtp_user'] ?? '');
+        $user = trim((string) ($c['smtp_user'] ?? $c['smtp_username'] ?? ''));
         $pass = (string) ($c['smtp_pass'] ?? '');
 
         if ($host === '') {
             throw new RuntimeException('smtp_host no configurado');
         }
 
+        $verifySsl = !isset($c['smtp_verify_peer']) || filter_var($c['smtp_verify_peer'], FILTER_VALIDATE_BOOLEAN);
+        $ctx = stream_context_create([
+            'ssl' => [
+                'verify_peer' => $verifySsl,
+                'verify_peer_name' => $verifySsl,
+                'allow_self_signed' => !$verifySsl,
+            ],
+        ]);
+
         $remote = ($enc === 'ssl' ? 'ssl://' : 'tcp://') . $host . ':' . $port;
         $errno = 0;
         $errstr = '';
-        $fp = @stream_socket_client($remote, $errno, $errstr, 25, STREAM_CLIENT_CONNECT);
+        $fp = @stream_socket_client($remote, $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $ctx);
         if ($fp === false) {
             throw new RuntimeException('No se pudo conectar al SMTP: ' . $errstr . " ({$errno})");
         }
@@ -149,8 +158,8 @@ if (!function_exists('lm_mail_send_app')) {
         }
 
         $c = lm_mail_app_config();
-        $from = trim((string) ($c['mail_from'] ?? ''));
-        $fromName = trim((string) ($c['mail_from_name'] ?? 'LogiMeat'));
+        $from = trim((string) ($c['mail_from'] ?? $c['from_email'] ?? ''));
+        $fromName = trim((string) ($c['mail_from_name'] ?? $c['from_name'] ?? 'LogiMeat'));
 
         if ($from === '' || !filter_var($from, FILTER_VALIDATE_EMAIL)) {
             return ['ok' => false, 'error' => 'mail_from no configurado o no válido en conexion.local.php'];

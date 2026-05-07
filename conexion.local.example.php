@@ -25,6 +25,8 @@ return [
     // 'smtp_encryption' => 'ssl',
     // 'smtp_user' => 'no-responder-sirt@colbeef.com.co',
     // 'smtp_pass' => 'PONGA_LA_CLAVE_AQUI',
+    // Si la conexión SSL falla por certificado interno, probar:
+    // 'smtp_verify_peer' => false,
     //
     // Otros ejemplos: Microsoft 365 → smtp.office365.com, 587, 'tls'
     // Relé interno puerto 25 sin cifrado → smtp_encryption => ''
