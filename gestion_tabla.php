@@ -103,6 +103,7 @@ if ($tiene_id_interno) {
 }
 
 // 4. PROCESAMIENTO POST (CRUD)
+$error_msg = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
     if (!lm_csrf_validar($_POST['_csrf'] ?? null)) {
         header('Location: maestros.php?error=csrf');
@@ -124,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
             
             // Limpiamos datos que no van directo a columnas
             unset(
+                $datos_post['_csrf'],
                 $datos_post['action'],
                 $datos_post['id_interno_hidden'],
                 $datos_post['id_interno'],
@@ -179,7 +181,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
         }
         header("Location: gestion_tabla.php?tabla=$tabla_get&msg=success");
         exit();
-    } catch (PDOException $e) { $error_msg = "Error: " . $e->getMessage(); }
+    } catch (PDOException $e) {
+        $error_msg = 'Error al guardar: ' . $e->getMessage();
+    }
 }
 
 // 5. CONSULTA DE DATOS
@@ -247,10 +251,20 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
 
     <div class="flex-1 flex flex-col ml-64 min-h-screen w-[calc(100%-16rem)]">
         <main class="p-6 flex-grow">
-            
+            <?php if ($error_msg !== ''): ?>
+                <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[11px] font-bold text-red-700">
+                    <?= htmlspecialchars($error_msg, ENT_QUOTES, 'UTF-8') ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['msg']) && $_GET['msg'] === 'success'): ?>
+                <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[11px] font-bold text-emerald-800">
+                    Cambios guardados correctamente.
+                </div>
+            <?php endif; ?>
+
             <header class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-extrabold text-slate-800 tracking-tighter italic uppercase"><?= $titulo_modulo ?></h2>
-                <?php if($es_admin): ?>
+                <?php if ($es_admin): ?>
                 <div class="flex gap-2">
                     <button onclick="document.getElementById('modalEliminar').classList.add('modal-active')" class="bg-white border border-red-100 text-red-500 px-4 py-2 rounded-xl font-black text-[10px] uppercase transition-all hover:bg-red-50">🗑️ Eliminar</button>
                     <button onclick="abrirModalCrear()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-[10px] shadow-lg uppercase transition-all hover:scale-105 active:scale-95">+ Nuevo Registro</button>
