@@ -69,6 +69,9 @@ function mostrarSidebar($activePage = '') {
                 <a href="index.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'home' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">
                     <span>📊</span> <span class="text-sm font-bold">Dashboard</span>
                 </a>
+                <a href="estadisticas.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'estadisticas' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">
+                    <span>📈</span> <span class="text-sm font-bold">Estadísticas</span>
+                </a>
                 <a href="programacion.php" class="flex items-center gap-3 p-4 rounded-2xl transition-all <?= $activePage == 'prog' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800' ?>">
                     <span>📅</span> <span class="text-sm font-bold">Programación</span>
                 </a>

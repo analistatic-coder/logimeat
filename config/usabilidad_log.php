@@ -337,6 +337,7 @@ function lm_usabilidad_etiqueta_modulo(string $modulo): string
     $map = [
         'sesion' => 'Inicio de sesión',
         'index' => 'Dashboard',
+        'estadisticas' => 'Estadísticas',
         'programacion' => 'Programación',
         'nueva_programacion' => 'Nueva programación',
         'editar_programacion' => 'Editar programación',
