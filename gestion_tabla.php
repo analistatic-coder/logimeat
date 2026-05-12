@@ -106,10 +106,10 @@ $camposEmpleadoLower = $es_tabla_empleado
     ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
     : [];
 $empleadoTienePuestoTrabajo = $es_tabla_empleado && in_array('puesto_trabajo', $camposEmpleadoLower, true);
-$camposProgLower = $es_tabla_empleado_programacion
+$camposEmpleadoProgLower = $es_tabla_empleado_programacion
     ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
     : [];
-$progTienePuestoTrabajo = $es_tabla_empleado_programacion && in_array('puesto_trabajo', $camposProgLower, true);
+$empleadoProgTienePuestoTrabajo = $es_tabla_empleado_programacion && in_array('puesto_trabajo', $camposEmpleadoProgLower, true);
 $es_tabla_user = strtolower($tabla_get) === 'user';
 
 /**
@@ -560,7 +560,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const empleadosProgDisponibles = <?= $empleadosProgDisponiblesJson ?>;
         const progFormDefaults = <?= $progFormDefaultsJson ?>;
         const empleadoTienePuestoTrabajo = <?= $empleadoTienePuestoTrabajo ? 'true' : 'false' ?>;
-        const progTienePuestoTrabajo = <?= $progTienePuestoTrabajo ? 'true' : 'false' ?>;
+        const empleadoProgTienePuestoTrabajo = <?= $empleadoProgTienePuestoTrabajo ? 'true' : 'false' ?>;
         const puestosTrabajoEmpleado = <?= json_encode(['Visceras', 'Subproductos', 'Canales', 'Pieles', 'Desposte'], JSON_UNESCAPED_UNICODE) ?>;
         const etiquetasEmpleadoCrear = {
             'id_interno': 'ID interno',
@@ -814,20 +814,14 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                     input.value = horaDbAInputTime(datosActuales[col] || '');
                     input.className = 'w-full p-3 border border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all';
                     field = input;
-                } else if (
-                    (esTablaEmpleado && empleadoTienePuestoTrabajo && colLower === 'puesto_trabajo')
-                    || (esTablaEmpleadoProgramacion && progTienePuestoTrabajo && colLower === 'puesto_trabajo')
-                ) {
+                } else if (((esTablaEmpleado && empleadoTienePuestoTrabajo) || (esTablaEmpleadoProgramacion && empleadoProgTienePuestoTrabajo)) && colLower === 'puesto_trabajo') {
                     label.innerText = 'Puesto de trabajo';
                     const select = document.createElement('select');
                     select.name = col;
-                    const esProgPuesto = esTablaEmpleadoProgramacion && progTienePuestoTrabajo && colLower === 'puesto_trabajo';
-                    select.className = esProgPuesto && !esEdicion
-                        ? 'w-full p-3 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white text-slate-800'
-                        : 'w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white';
+                    select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
                     const first = document.createElement('option');
                     first.value = '';
-                    first.textContent = esProgPuesto && !esEdicion ? '— Elegir puesto —' : '— Elegir —';
+                    first.textContent = '— Elegir —';
                     select.appendChild(first);
                     const valPt = String(datosActuales[col] || '').trim();
                     (puestosTrabajoEmpleado || []).forEach(function (nom) {
