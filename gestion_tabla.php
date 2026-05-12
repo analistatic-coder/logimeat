@@ -106,10 +106,6 @@ $camposEmpleadoLower = $es_tabla_empleado
     ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
     : [];
 $empleadoTienePuestoTrabajo = $es_tabla_empleado && in_array('puesto_trabajo', $camposEmpleadoLower, true);
-$camposEmpleadoProgLower = $es_tabla_empleado_programacion
-    ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
-    : [];
-$empleadoProgTienePuestoTrabajo = $es_tabla_empleado_programacion && in_array('puesto_trabajo', $camposEmpleadoProgLower, true);
 $es_tabla_user = strtolower($tabla_get) === 'user';
 
 /**
@@ -560,7 +556,6 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const empleadosProgDisponibles = <?= $empleadosProgDisponiblesJson ?>;
         const progFormDefaults = <?= $progFormDefaultsJson ?>;
         const empleadoTienePuestoTrabajo = <?= $empleadoTienePuestoTrabajo ? 'true' : 'false' ?>;
-        const empleadoProgTienePuestoTrabajo = <?= $empleadoProgTienePuestoTrabajo ? 'true' : 'false' ?>;
         const puestosTrabajoEmpleado = <?= json_encode(['Visceras', 'Subproductos', 'Canales', 'Pieles', 'Desposte'], JSON_UNESCAPED_UNICODE) ?>;
         const etiquetasEmpleadoCrear = {
             'id_interno': 'ID interno',
@@ -710,7 +705,11 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             });
             const out = [];
             orden.forEach(function (logico) {
-                const real = porLower.get(String(logico).toLowerCase());
+                const logLow = String(logico).toLowerCase();
+                let real = porLower.get(logLow);
+                if (real === undefined && logLow === 'puesto_trabajo') {
+                    real = 'Puesto_Trabajo';
+                }
                 if (real !== undefined) {
                     out.push(real);
                 }
@@ -814,11 +813,13 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                     input.value = horaDbAInputTime(datosActuales[col] || '');
                     input.className = 'w-full p-3 border border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all';
                     field = input;
-                } else if (((esTablaEmpleado && empleadoTienePuestoTrabajo) || (esTablaEmpleadoProgramacion && empleadoProgTienePuestoTrabajo)) && colLower === 'puesto_trabajo') {
+                } else if (colLower === 'puesto_trabajo' && ((esTablaEmpleado && empleadoTienePuestoTrabajo) || esTablaEmpleadoProgramacion)) {
                     label.innerText = 'Puesto de trabajo';
                     const select = document.createElement('select');
                     select.name = col;
-                    select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
+                    select.className = esTablaEmpleadoProgramacion && !esEdicion
+                        ? 'w-full p-3 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white text-slate-800'
+                        : "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
                     const first = document.createElement('option');
                     first.value = '';
                     first.textContent = '— Elegir —';
