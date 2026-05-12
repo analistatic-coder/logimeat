@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS empleado_programacion (
   Actividad VARCHAR(128) DEFAULT NULL,
   Planta VARCHAR(32) DEFAULT NULL,
   Producto VARCHAR(128) DEFAULT NULL,
+  Puesto_Trabajo VARCHAR(64) DEFAULT NULL,
   Observaciones TEXT,
   PRIMARY KEY (id_interno),
   UNIQUE KEY uk_prog_personal (ID_Programacion),
