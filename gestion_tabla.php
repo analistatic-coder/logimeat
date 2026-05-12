@@ -2,6 +2,8 @@
 require_once 'auth.php';
 require_once 'conexion.php';
 require_once __DIR__ . '/config/logisticos_vinculo_maestro.php';
+require_once __DIR__ . '/config/personal_helpers.php';
+require_once __DIR__ . '/config/programacion_catalogos.php';
 
 // 1. SEGURIDAD Y PARÁMETROS DE RUTA
 $es_admin = lm_es_admin();
@@ -54,6 +56,52 @@ $empleado_pk_es_id_interno = $es_tabla_empleado && strtolower((string) $columna_
 $empleado_id_empleado_manual = $es_tabla_empleado
     && in_array('id_empleado', array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field')), true)
     && ($empleado_cedula_como_pk || $empleado_pk_es_id_interno);
+$es_tabla_empleado_programacion = strtolower($tabla_get) === 'empleado_programacion';
+$diasProgSemana = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', 'LUNES A VIERNES'];
+$progSelAnio = 2026;
+$progSelSem = 16;
+$progSelDia = 'LUNES';
+$empleadosProgDisponibles = [];
+$progFormDefaults = [];
+$progFormDefaultsJson = '{}';
+$empleadosProgDisponiblesJson = '[]';
+if ($es_tabla_empleado_programacion) {
+    $progSelAnio = max(2020, min(2035, (int) ($_GET['prog_anio'] ?? (int) date('o'))));
+    $progSelSem = max(1, min(53, (int) ($_GET['prog_semana'] ?? (int) date('W'))));
+    $rawDia = strtoupper(trim((string) ($_GET['prog_dia'] ?? 'LUNES')));
+    $progSelDia = in_array($rawDia, $diasProgSemana, true) ? $rawDia : 'LUNES';
+    try {
+        $empleadosProgDisponibles = lm_empleados_disponibles_programacion(
+            $pdo,
+            $progSelAnio,
+            $progSelSem,
+            $progSelDia,
+            null,
+            null
+        );
+    } catch (Throwable) {
+        $empleadosProgDisponibles = [];
+    }
+    $plantasOpts = programacion_plantas_opciones();
+    $keysPl = array_keys($plantasOpts);
+    $plantaDef = $keysPl[0] ?? 'BENEFICIO';
+    $acts = programacion_listar_actividades($pdo);
+    $actDef = $acts[0] ?? '';
+    $prodsPl = programacion_productos_por_planta()[$plantaDef] ?? [];
+    $prodDef = $prodsPl[0] ?? '';
+    $progFormDefaults = [
+        'Anio' => $progSelAnio,
+        'Numero_Semana' => $progSelSem,
+        'Dia_Semana' => $progSelDia,
+        'Actividad' => $actDef !== '' ? $actDef : null,
+        'Planta' => $plantaDef,
+        'Producto' => $prodDef !== '' ? $prodDef : null,
+        'Turno' => null,
+        'Observaciones' => null,
+    ];
+    $progFormDefaultsJson = json_encode($progFormDefaults, JSON_UNESCAPED_UNICODE);
+    $empleadosProgDisponiblesJson = json_encode($empleadosProgDisponibles, JSON_UNESCAPED_UNICODE);
+}
 $camposEmpleadoLower = $es_tabla_empleado
     ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
     : [];
@@ -156,6 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                     }
                     $datos_post = $filtradoEmp;
                 }
+                $abortarCrearRedirect = false;
                 $asignar_id_auto = true;
                 if ($empleado_cedula_como_pk) {
                     $asignar_id_auto = false;
@@ -163,7 +212,73 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                     $asignar_id_auto = false;
                 }
                 if ($columna_id_maestro && $asignar_id_auto) {
-                    $datos_post[$columna_id_maestro] = calcularSiguienteIdNegocio($pdo, $tabla_get, $columna_id_maestro);
+                    $omitirAutoIdProg = strtolower((string) $tabla_get) === 'empleado_programacion'
+                        && strtoupper((string) $columna_id_maestro) === 'ID_PROGRAMACION';
+                    if (!$omitirAutoIdProg) {
+                        $datos_post[$columna_id_maestro] = calcularSiguienteIdNegocio($pdo, $tabla_get, $columna_id_maestro);
+                    }
+                }
+                if (strtolower((string) $tabla_get) === 'empleado_programacion') {
+                    $diasProgSemanaPost = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', 'LUNES A VIERNES'];
+                    $py = max(2020, min(2035, (int) ($datos_post['Anio'] ?? date('o'))));
+                    $pw = max(1, min(53, (int) ($datos_post['Numero_Semana'] ?? date('W'))));
+                    $diaP = strtoupper(trim((string) ($datos_post['Dia_Semana'] ?? 'LUNES')));
+                    if (!in_array($diaP, $diasProgSemanaPost, true)) {
+                        $diaP = 'LUNES';
+                    }
+                    $plantasOptsPost = programacion_plantas_opciones();
+                    $keysPlP = array_keys($plantasOptsPost);
+                    $plantaDefP = $keysPlP[0] ?? 'BENEFICIO';
+                    $plantaVal = trim((string) ($datos_post['Planta'] ?? ''));
+                    if ($plantaVal === '' || !isset($plantasOptsPost[$plantaVal])) {
+                        $plantaVal = $plantaDefP;
+                    }
+                    $actsPost = programacion_listar_actividades($pdo);
+                    $actDefP = $actsPost[0] ?? '';
+                    $prodsPost = programacion_productos_por_planta()[$plantaVal] ?? [];
+                    $prodVal = trim((string) ($datos_post['Producto'] ?? ''));
+                    if ($prodVal === '' || !programacion_es_producto_valido($plantaVal, $prodVal)) {
+                        $prodVal = $prodsPost[0] ?? '';
+                    }
+                    $actVal = trim((string) ($datos_post['Actividad'] ?? ''));
+                    if ($actVal === '' && $actDefP !== '') {
+                        $actVal = $actDefP;
+                    }
+                    $datos_post = array_merge([
+                        'Anio' => $py,
+                        'Numero_Semana' => $pw,
+                        'Dia_Semana' => $diaP,
+                        'Planta' => $plantaVal,
+                        'Producto' => $prodVal,
+                        'Actividad' => $actVal,
+                        'Turno' => $datos_post['Turno'] ?? null,
+                        'Observaciones' => $datos_post['Observaciones'] ?? null,
+                    ], $datos_post);
+                    if (trim((string) ($datos_post['Actividad'] ?? '')) === '') {
+                        $datos_post['Actividad'] = $actDefP !== '' ? $actDefP : 'TRASLADO A PCC';
+                    }
+                    if (trim((string) ($datos_post['ID_Programacion'] ?? '')) === '') {
+                        $datos_post['ID_Programacion'] = substr(bin2hex(random_bytes(4)), 0, 8);
+                    }
+                    $idEmpProg = trim((string) ($datos_post['ID_Empleado'] ?? ''));
+                    if ($idEmpProg === '') {
+                        $error_msg = 'Seleccione un empleado.';
+                        $abortarCrearRedirect = true;
+                    } else {
+                        $errLib = lm_validar_programacion_libre(
+                            $pdo,
+                            $idEmpProg,
+                            (string) ($datos_post['Dia_Semana'] ?? 'LUNES'),
+                            (int) ($datos_post['Anio'] ?? $py),
+                            (int) ($datos_post['Numero_Semana'] ?? $pw),
+                            null,
+                            null
+                        );
+                        if ($errLib !== null) {
+                            $error_msg = $errLib;
+                            $abortarCrearRedirect = true;
+                        }
+                    }
                 }
                 if ($empleado_cedula_como_pk || $empleado_pk_es_id_interno) {
                     $ie = trim((string) ($datos_post['ID_Empleado'] ?? ''));
@@ -175,15 +290,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                         $datos_post['ID_Empleado'] = $nd;
                     }
                 }
-                $columnas_sql = array_keys($datos_post);
-                $placeholders = str_repeat('?,', count($columnas_sql) - 1) . '?';
-                $sql = "INSERT INTO `$tabla_get` (" . implode(',', $columnas_sql) . ") VALUES ($placeholders)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute(array_values($datos_post));
-                if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
-                    $idOplNuevo = trim((string) ($datos_post[$columna_id_maestro] ?? ''));
-                    if ($idOplNuevo !== '' && $vincConductor !== '' && $vincVehiculo !== '') {
-                        logisticos_maestro_insertar_triple($pdo, $idOplNuevo, $vincConductor, $vincVehiculo);
+                if (!$abortarCrearRedirect) {
+                    $columnas_sql = array_keys($datos_post);
+                    $placeholders = str_repeat('?,', count($columnas_sql) - 1) . '?';
+                    $sql = "INSERT INTO `$tabla_get` (" . implode(',', $columnas_sql) . ") VALUES ($placeholders)";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute(array_values($datos_post));
+                    if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
+                        $idOplNuevo = trim((string) ($datos_post[$columna_id_maestro] ?? ''));
+                        if ($idOplNuevo !== '' && $vincConductor !== '' && $vincVehiculo !== '') {
+                            logisticos_maestro_insertar_triple($pdo, $idOplNuevo, $vincConductor, $vincVehiculo);
+                        }
                     }
                 }
             } else {
@@ -244,8 +361,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                 }
             }
         }
-        header("Location: gestion_tabla.php?tabla=$tabla_get&msg=success");
-        exit();
+        if ($error_msg === '') {
+            header("Location: gestion_tabla.php?tabla=$tabla_get&msg=success");
+            exit();
+        }
     } catch (PDOException $e) {
         $error_msg = 'Error al guardar: ' . $e->getMessage();
     }
@@ -337,6 +456,14 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 <?php endif; ?>
             </header>
 
+            <?php if ($es_tabla_empleado_programacion && $es_admin): ?>
+            <div class="mb-4 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-[11px] text-sky-900 leading-relaxed">
+                <strong>Nuevo registro:</strong> el desplegable <strong>Empleado</strong> muestra solo personal <strong>activo</strong>, sin descanso ni otro turno ya programado para
+                <strong><?= htmlspecialchars($progSelDia) ?></strong>, semana ISO <strong><?= (int) $progSelSem ?></strong> de <strong><?= (int) $progSelAnio ?></strong>.
+                <a class="font-black text-sky-800 underline ml-1" href="gestion_tabla.php?<?= htmlspecialchars(http_build_query(['tabla' => 'empleado_programacion', 'prog_anio' => (int) date('o'), 'prog_semana' => (int) date('W'), 'prog_dia' => 'LUNES'])) ?>">Ir a semana actual</a>
+            </div>
+            <?php endif; ?>
+
             <div class="mb-6 relative">
                 <span class="absolute left-5 top-4 text-slate-400 text-lg">🔍</span>
                 <input type="text" id="globalSearch" onkeyup="filterMasterTable()" 
@@ -425,6 +552,9 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const empleadoPkInterno = <?= $empleado_pk_es_id_interno ? 'true' : 'false' ?>;
         const empleadoIdEmpleadoManual = <?= $empleado_id_empleado_manual ? 'true' : 'false' ?>;
         const esTablaEmpleado = <?= $es_tabla_empleado ? 'true' : 'false' ?>;
+        const esTablaEmpleadoProgramacion = <?= $es_tabla_empleado_programacion ? 'true' : 'false' ?>;
+        const empleadosProgDisponibles = <?= $empleadosProgDisponiblesJson ?>;
+        const progFormDefaults = <?= $progFormDefaultsJson ?>;
         const empleadoTienePuestoTrabajo = <?= $empleadoTienePuestoTrabajo ? 'true' : 'false' ?>;
         const puestosTrabajoEmpleado = <?= json_encode(['Visceras', 'Subproductos', 'Canales', 'Pieles', 'Desposte'], JSON_UNESCAPED_UNICODE) ?>;
         const etiquetasEmpleadoCrear = {
@@ -522,11 +652,18 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             }
             if (nombreColIDNegocio) {
                 const esColIde = String(nombreColIDNegocio).toLowerCase() === 'id_empleado';
-                datosLimpios[nombreColIDNegocio] = (empleadoIdEmpleadoManual && esColIde) ? '' : proximoID;
+                const esColProg = String(nombreColIDNegocio).toLowerCase() === 'id_programacion';
+                if (esTablaEmpleadoProgramacion && esColProg) {
+                    datosLimpios[nombreColIDNegocio] = '';
+                } else {
+                    datosLimpios[nombreColIDNegocio] = (empleadoIdEmpleadoManual && esColIde) ? '' : proximoID;
+                }
             }
             
             renderizarCampos(datosLimpios, false);
-            agregarRelacionOplEnCrear();
+            if (!esTablaEmpleadoProgramacion) {
+                agregarRelacionOplEnCrear();
+            }
             mostrarModal();
         }
 
@@ -538,7 +675,9 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             document.getElementById('formIdInternoHidden').value = idInt;
             
             renderizarCampos(datosFila, true);
-            agregarRelacionOplEnEdicion(datosFila);
+            if (!esTablaEmpleadoProgramacion) {
+                agregarRelacionOplEnEdicion(datosFila);
+            }
             mostrarModal();
         }
 
@@ -558,6 +697,36 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             return out;
         }
 
+        function columnasListaEmpleadoProgramacionNuevo(lista) {
+            const orden = ['id_interno', 'ID_Programacion', 'ID_Empleado', 'Hora_Entrada', 'Hora_Salida'];
+            const porLower = new Map();
+            lista.forEach(function (c) {
+                porLower.set(String(c).toLowerCase(), c);
+            });
+            const out = [];
+            orden.forEach(function (logico) {
+                const real = porLower.get(String(logico).toLowerCase());
+                if (real !== undefined) {
+                    out.push(real);
+                }
+            });
+            return out;
+        }
+
+        function horaDbAInputTime(val) {
+            var s = String(val || '').trim();
+            var m = s.match(/^(\d{1,2}):(\d{2})$/);
+            if (!m) {
+                return '';
+            }
+            var h = parseInt(m[1], 10);
+            var mi = m[2];
+            if (h < 0 || h > 23) {
+                return '';
+            }
+            return (h < 10 ? '0' : '') + h + ':' + mi;
+        }
+
         function renderizarCampos(datosActuales, esEdicion) {
             const contenedor = document.getElementById('camposDinamicos');
             contenedor.innerHTML = "";
@@ -570,14 +739,20 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 accion: accionesDisponibles,
             };
             
-            const colsIter = (esTablaEmpleado && !esEdicion) ? columnasListaEmpleadoNuevo(columnasLista) : columnasLista;
+            const colsIter = (esTablaEmpleado && !esEdicion)
+                ? columnasListaEmpleadoNuevo(columnasLista)
+                : (esTablaEmpleadoProgramacion && !esEdicion)
+                    ? columnasListaEmpleadoProgramacionNuevo(columnasLista)
+                    : columnasLista;
             colsIter.forEach(col => {
                 const label = document.createElement('label');
                 label.className = "block text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 mt-4 tracking-widest";
                 const colLower = col.toLowerCase();
                 label.innerText = (esTablaEmpleado && !esEdicion && Object.prototype.hasOwnProperty.call(etiquetasEmpleadoCrear, colLower))
                     ? etiquetasEmpleadoCrear[colLower]
-                    : col.replace('_', ' ');
+                    : (esTablaEmpleadoProgramacion && !esEdicion && colLower === 'id_programacion')
+                        ? 'ID programación'
+                        : col.replace('_', ' ');
                 
                 let field = null;
                 if (esTablaEmpleado && colLower === 'activo') {
@@ -600,6 +775,40 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         select.appendChild(opt);
                     });
                     field = select;
+                } else if (esTablaEmpleadoProgramacion && !esEdicion && colLower === 'id_empleado') {
+                    label.innerText = 'Empleado';
+                    const select = document.createElement('select');
+                    select.name = col;
+                    select.required = true;
+                    select.className = "w-full p-3 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white text-slate-800";
+                    const z0 = document.createElement('option');
+                    z0.value = '';
+                    z0.textContent = '— Elegir empleado —';
+                    select.appendChild(z0);
+                    const selId = String(datosActuales[col] || '').trim();
+                    (empleadosProgDisponibles || []).forEach(function (e) {
+                        var id = String(e.ID_Empleado || '').trim();
+                        if (!id) {
+                            return;
+                        }
+                        var opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = String(e.Nombre_Completo || id) + ' (' + id + ')';
+                        if (id === selId) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                    field = select;
+                } else if (esTablaEmpleadoProgramacion && !esEdicion && (colLower === 'hora_entrada' || colLower === 'hora_salida')) {
+                    label.innerText = colLower === 'hora_entrada' ? 'Hora de entrada' : 'Hora de salida';
+                    const input = document.createElement('input');
+                    input.type = 'time';
+                    input.name = col;
+                    input.step = '60';
+                    input.value = horaDbAInputTime(datosActuales[col] || '');
+                    input.className = 'w-full p-3 border border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all';
+                    field = input;
                 } else if (esTablaEmpleado && empleadoTienePuestoTrabajo && colLower === 'puesto_trabajo') {
                     label.innerText = 'Puesto de trabajo';
                     const select = document.createElement('select');
@@ -699,7 +908,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         field.autocomplete = 'off';
                     }
                     field.classList.add('id-interno-style');
-                } else if (col === nombreColIDNegocio && !(esTablaEmpleado && empleadoPkInterno && colLower === 'id_empleado')) {
+                } else if (col === nombreColIDNegocio && !(esTablaEmpleado && empleadoPkInterno && colLower === 'id_empleado') && !(esTablaEmpleadoProgramacion && !esEdicion && colLower === 'id_programacion')) {
                     if (field.tagName === 'INPUT') {
                         field.readOnly = true;
                         field.tabIndex = -1;
@@ -712,10 +921,41 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 if (esTablaEmpleado && empleadoIdEmpleadoManual && colLower === 'id_empleado' && field && field.tagName === 'INPUT') {
                     field.placeholder = 'Cédula (ID empleado)';
                 }
+                if (esTablaEmpleadoProgramacion && !esEdicion && colLower === 'id_programacion' && field && field.tagName === 'INPUT') {
+                    field.placeholder = 'Opcional: se genera si queda vacío';
+                    field.readOnly = false;
+                    field.removeAttribute('readonly');
+                    field.tabIndex = 0;
+                    field.classList.remove('input-locked');
+                }
 
                 contenedor.appendChild(label);
                 contenedor.appendChild(field);
             });
+
+            if (esTablaEmpleadoProgramacion && !esEdicion && progFormDefaults && typeof progFormDefaults === 'object') {
+                Object.keys(progFormDefaults).forEach(function (k) {
+                    var kLow = String(k).toLowerCase();
+                    var ya = false;
+                    colsIter.forEach(function (c) {
+                        if (String(c).toLowerCase() === kLow) {
+                            ya = true;
+                        }
+                    });
+                    if (ya) {
+                        return;
+                    }
+                    var v = progFormDefaults[k];
+                    if (v === null || v === undefined) {
+                        return;
+                    }
+                    var hid = document.createElement('input');
+                    hid.type = 'hidden';
+                    hid.name = k;
+                    hid.value = String(v);
+                    contenedor.appendChild(hid);
+                });
+            }
         }
 
         function mostrarModal() {
