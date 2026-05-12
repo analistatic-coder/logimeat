@@ -49,6 +49,11 @@ if ($columna_pk === null) {
 
 $es_tabla_empleado = strtolower($tabla_get) === 'empleado';
 $empleado_cedula_como_pk = $es_tabla_empleado && strtoupper((string) $columna_pk) === 'ID_EMPLEADO';
+/** Tabla empleado con clave técnica id_interno y cédula en ID_Empleado (caso Laragon / legado). */
+$empleado_pk_es_id_interno = $es_tabla_empleado && strtolower((string) $columna_pk) === 'id_interno';
+$empleado_id_empleado_manual = $es_tabla_empleado
+    && in_array('id_empleado', array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field')), true)
+    && ($empleado_cedula_como_pk || $empleado_pk_es_id_interno);
 $camposEmpleadoLower = $es_tabla_empleado
     ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
     : [];
@@ -138,11 +143,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
             );
 
             if ($action == 'crear') {
-                $asignar_id_auto = !($empleado_cedula_como_pk);
+                $asignar_id_auto = true;
+                if ($empleado_cedula_como_pk) {
+                    $asignar_id_auto = false;
+                } elseif ($empleado_pk_es_id_interno && $columna_id_maestro && strtoupper((string) $columna_id_maestro) === 'ID_EMPLEADO') {
+                    $asignar_id_auto = false;
+                }
                 if ($columna_id_maestro && $asignar_id_auto) {
                     $datos_post[$columna_id_maestro] = calcularSiguienteIdNegocio($pdo, $tabla_get, $columna_id_maestro);
                 }
-                if ($empleado_cedula_como_pk) {
+                if ($empleado_cedula_como_pk || $empleado_pk_es_id_interno) {
                     $ie = trim((string) ($datos_post['ID_Empleado'] ?? ''));
                     $nd = trim((string) ($datos_post['Numero_Documento'] ?? ''));
                     if ($ie !== '' && $nd === '') {
@@ -169,11 +179,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                 if ($empleado_cedula_como_pk && $columna_pk) {
                     $nuevoPkEmpleado = trim((string) ($datos_post[$columna_pk] ?? ''));
                 }
+                $oldIdeHijos = '';
+                $newIdeHijos = '';
+                $txEmpleadoIdeHijos = false;
+                if ($empleado_pk_es_id_interno && $columna_pk) {
+                    $colPkEsc = str_replace('`', '``', $columna_pk);
+                    $stIde = $pdo->prepare("SELECT `ID_Empleado` FROM `$tabla_get` WHERE `$colPkEsc` = ?");
+                    $stIde->execute([$oldPkRef]);
+                    $oldIdeHijos = trim((string) ($stIde->fetchColumn() ?: ''));
+                    $newIdeHijos = trim((string) ($datos_post['ID_Empleado'] ?? ''));
+                    $txEmpleadoIdeHijos = $oldIdeHijos !== '' && $newIdeHijos !== '' && $oldIdeHijos !== $newIdeHijos;
+                }
                 if ($columna_pk && isset($datos_post[$columna_pk])) {
                     unset($datos_post[$columna_pk]);
                 }
                 $txEmpleadoPk = $empleado_cedula_como_pk && $nuevoPkEmpleado !== '' && $nuevoPkEmpleado !== $oldPkRef;
-                if ($txEmpleadoPk) {
+                if ($txEmpleadoPk || $txEmpleadoIdeHijos) {
                     $pdo->beginTransaction();
                 }
                 try {
@@ -181,6 +202,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                         $pdo->prepare('UPDATE empleado_descanso SET `ID_Empleado`=? WHERE `ID_Empleado`=?')->execute([$nuevoPkEmpleado, $oldPkRef]);
                         $pdo->prepare('UPDATE empleado_programacion SET `ID_Empleado`=? WHERE `ID_Empleado`=?')->execute([$nuevoPkEmpleado, $oldPkRef]);
                         $datos_post[$columna_pk] = $nuevoPkEmpleado;
+                    } elseif ($txEmpleadoIdeHijos) {
+                        $pdo->prepare('UPDATE empleado_descanso SET `ID_Empleado`=? WHERE `ID_Empleado`=?')->execute([$newIdeHijos, $oldIdeHijos]);
+                        $pdo->prepare('UPDATE empleado_programacion SET `ID_Empleado`=? WHERE `ID_Empleado`=?')->execute([$newIdeHijos, $oldIdeHijos]);
                     }
                     $columnas_sql = array_keys($datos_post);
                     $set_query = implode('=?, ', $columnas_sql) . '=?';
@@ -190,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                     $params[] = $id_interno_referencia;
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute($params);
-                    if ($txEmpleadoPk) {
+                    if ($txEmpleadoPk || $txEmpleadoIdeHijos) {
                         $pdo->commit();
                     }
                     if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
@@ -200,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                         }
                     }
                 } catch (PDOException $eUpd) {
-                    if ($txEmpleadoPk && $pdo->inTransaction()) {
+                    if (($txEmpleadoPk || $txEmpleadoIdeHijos) && $pdo->inTransaction()) {
                         $pdo->rollBack();
                     }
                     throw $eUpd;
@@ -385,6 +409,8 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const columnasLista = <?= json_encode($columnas_vista) ?>;
         const columnaPk = <?= json_encode($columna_pk) ?>;
         const empleadoCedulaComoPk = <?= $empleado_cedula_como_pk ? 'true' : 'false' ?>;
+        const empleadoPkInterno = <?= $empleado_pk_es_id_interno ? 'true' : 'false' ?>;
+        const empleadoIdEmpleadoManual = <?= $empleado_id_empleado_manual ? 'true' : 'false' ?>;
         const esTablaEmpleado = <?= $es_tabla_empleado ? 'true' : 'false' ?>;
         const empleadoTienePuestoTrabajo = <?= $empleadoTienePuestoTrabajo ? 'true' : 'false' ?>;
         const puestosTrabajoEmpleado = <?= json_encode(['Visceras', 'Subproductos', 'Canales', 'Pieles', 'Desposte'], JSON_UNESCAPED_UNICODE) ?>;
@@ -471,7 +497,8 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 if (colInt) datosLimpios[colInt] = String(proximoIdInterno);
             }
             if (nombreColIDNegocio) {
-                datosLimpios[nombreColIDNegocio] = empleadoCedulaComoPk ? '' : proximoID;
+                const esColIde = String(nombreColIDNegocio).toLowerCase() === 'id_empleado';
+                datosLimpios[nombreColIDNegocio] = (empleadoIdEmpleadoManual && esColIde) ? '' : proximoID;
             }
             
             renderizarCampos(datosLimpios, false);
@@ -621,7 +648,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         field.autocomplete = 'off';
                     }
                     field.classList.add('id-interno-style');
-                } else if (col === nombreColIDNegocio) {
+                } else if (col === nombreColIDNegocio && !(esTablaEmpleado && empleadoPkInterno && colLower === 'id_empleado')) {
                     if (field.tagName === 'INPUT') {
                         field.readOnly = true;
                         field.tabIndex = -1;
@@ -629,6 +656,10 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         field.disabled = true;
                     }
                     field.classList.add('input-locked');
+                }
+
+                if (esTablaEmpleado && empleadoIdEmpleadoManual && colLower === 'id_empleado' && field && field.tagName === 'INPUT') {
+                    field.placeholder = 'Cédula (ID empleado)';
                 }
 
                 contenedor.appendChild(label);
