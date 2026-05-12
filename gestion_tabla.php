@@ -143,6 +143,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
             );
 
             if ($action == 'crear') {
+                if (strtolower((string) $tabla_get) === 'empleado') {
+                    $permCrearEmpleado = [
+                        'id_interno', 'id_empleado', 'nombre_completo', 'cargo', 'email', 'telefono',
+                        'fecha_ingreso', 'activo', 'puesto_trabajo', 'observaciones',
+                    ];
+                    $filtradoEmp = [];
+                    foreach ($datos_post as $k => $v) {
+                        if (in_array(strtolower((string) $k), $permCrearEmpleado, true)) {
+                            $filtradoEmp[$k] = $v;
+                        }
+                    }
+                    $datos_post = $filtradoEmp;
+                }
                 $asignar_id_auto = true;
                 if ($empleado_cedula_como_pk) {
                     $asignar_id_auto = false;
@@ -414,6 +427,17 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const esTablaEmpleado = <?= $es_tabla_empleado ? 'true' : 'false' ?>;
         const empleadoTienePuestoTrabajo = <?= $empleadoTienePuestoTrabajo ? 'true' : 'false' ?>;
         const puestosTrabajoEmpleado = <?= json_encode(['Visceras', 'Subproductos', 'Canales', 'Pieles', 'Desposte'], JSON_UNESCAPED_UNICODE) ?>;
+        const etiquetasEmpleadoCrear = {
+            'id_interno': 'ID interno',
+            'id_empleado': 'ID empleado (cédula)',
+            'nombre_completo': 'Nombre completo',
+            'cargo': 'Cargo',
+            'email': 'Email',
+            'telefono': 'Teléfono',
+            'fecha_ingreso': 'Fecha de ingreso',
+            'puesto_trabajo': 'Puesto de trabajo',
+            'observaciones': 'Observaciones',
+        };
         const esTablaUser = <?= $es_tabla_user ? 'true' : 'false' ?>;
         const esTablaOpl = <?= strtolower($tabla_get) === 'opl' ? 'true' : 'false' ?>;
         const opcionesRelacionOpl = <?= json_encode($opcionesRelacionOpl, JSON_UNESCAPED_UNICODE) ?>;
@@ -518,6 +542,22 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             mostrarModal();
         }
 
+        function columnasListaEmpleadoNuevo(lista) {
+            const orden = ['id_interno', 'ID_Empleado', 'Nombre_Completo', 'Cargo', 'Email', 'Telefono', 'Fecha_Ingreso', 'Activo', 'Puesto_Trabajo', 'Observaciones'];
+            const porLower = new Map();
+            lista.forEach(function (c) {
+                porLower.set(String(c).toLowerCase(), c);
+            });
+            const out = [];
+            orden.forEach(function (logico) {
+                const real = porLower.get(String(logico).toLowerCase());
+                if (real !== undefined) {
+                    out.push(real);
+                }
+            });
+            return out;
+        }
+
         function renderizarCampos(datosActuales, esEdicion) {
             const contenedor = document.getElementById('camposDinamicos');
             contenedor.innerHTML = "";
@@ -530,15 +570,18 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 accion: accionesDisponibles,
             };
             
-            columnasLista.forEach(col => {
+            const colsIter = (esTablaEmpleado && !esEdicion) ? columnasListaEmpleadoNuevo(columnasLista) : columnasLista;
+            colsIter.forEach(col => {
                 const label = document.createElement('label');
                 label.className = "block text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 mt-4 tracking-widest";
-                label.innerText = col.replace('_', ' ');
+                const colLower = col.toLowerCase();
+                label.innerText = (esTablaEmpleado && !esEdicion && Object.prototype.hasOwnProperty.call(etiquetasEmpleadoCrear, colLower))
+                    ? etiquetasEmpleadoCrear[colLower]
+                    : col.replace('_', ' ');
                 
                 let field = null;
-                const colLower = col.toLowerCase();
                 if (esTablaEmpleado && colLower === 'activo') {
-                    label.innerText = 'Estado (Activo / Inactivo)';
+                    label.innerText = 'Estado (activo / inactivo)';
                     const select = document.createElement('select');
                     select.name = col;
                     select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
@@ -615,10 +658,18 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                     field = select;
                 } else {
                     const input = document.createElement('input');
-                    input.type = "text";
+                    if (esTablaEmpleado && !esEdicion && colLower === 'email') {
+                        input.type = 'email';
+                    } else if (esTablaEmpleado && !esEdicion && colLower === 'telefono') {
+                        input.type = 'tel';
+                    } else {
+                        input.type = 'text';
+                    }
                     input.name = col;
                     input.value = datosActuales[col] || "";
-                    input.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/20 transition-all";
+                    input.className = (esTablaEmpleado && !esEdicion)
+                        ? 'w-full p-3 border border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all'
+                        : 'w-full p-3 border border-slate-100 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/20 transition-all';
                     field = input;
                 }
                 
