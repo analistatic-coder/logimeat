@@ -5,6 +5,43 @@ require_once 'auth.php';
 require_once 'conexion.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
 require_once __DIR__ . '/config/programacion_opl_logistica.php';
+require_once __DIR__ . '/config/logisticos_vinculo_maestro.php';
+
+/**
+ * Busca por nombre o inserta fila mínima (id + nombre) en maestro. Solo tablas/columnas fijas.
+ */
+function programacion_alta_maestro_id_nombre(PDO $pdo, string $tabla, string $colId, string $colNombre, string $texto): ?string
+{
+    $tablasPerm = [
+        'clientes' => ['id' => 'ID_Cliente', 'nom' => 'Cliente'],
+        'opl' => ['id' => 'ID_OPL', 'nom' => 'OPL'],
+        'vehiculo' => ['id' => 'ID_Vehiculo', 'nom' => 'Vehiculo'],
+        'conductor' => ['id' => 'ID_Conductor', 'nom' => 'Conductor'],
+    ];
+    if (!isset($tablasPerm[$tabla]) || $tablasPerm[$tabla]['id'] !== $colId || $tablasPerm[$tabla]['nom'] !== $colNombre) {
+        return null;
+    }
+    $texto = trim($texto);
+    if ($texto === '') {
+        return null;
+    }
+    try {
+        $q = $pdo->prepare("SELECT `$colId` FROM `$tabla` WHERE UPPER(TRIM(`$colNombre`)) = UPPER(TRIM(?)) LIMIT 1");
+        $q->execute([$texto]);
+        $ex = $q->fetchColumn();
+        if ($ex !== false && $ex !== null && trim((string) $ex) !== '') {
+            return trim((string) $ex);
+        }
+        $max = $pdo->query("SELECT MAX(CAST(`$colId` AS UNSIGNED)) FROM `$tabla` WHERE CAST(`$colId` AS CHAR) REGEXP '^[0-9]+$'")->fetchColumn();
+        $nuevoId = ($max !== null && $max !== false && $max !== '') ? (string) ((int) $max + 1) : substr(bin2hex(random_bytes(4)), 0, 8);
+        $ins = $pdo->prepare("INSERT INTO `$tabla` (`$colId`, `$colNombre`) VALUES (?, ?)");
+        $ins->execute([$nuevoId, $texto]);
+
+        return $nuevoId;
+    } catch (Throwable) {
+        return null;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: nueva_programacion.php');
@@ -33,7 +70,9 @@ $plantaOp = trim((string) ($_POST['planta_operativa'] ?? ''));
 $producto = trim((string) ($_POST['producto'] ?? ''));
 $actividad = trim((string) ($_POST['actividad'] ?? ''));
 $cliente = trim((string) ($_POST['cliente'] ?? ''));
+$clienteNuevo = trim((string) ($_POST['cliente_nuevo'] ?? ''));
 $opl = trim((string) ($_POST['opl'] ?? ''));
+$oplNuevo = trim((string) ($_POST['opl_nuevo'] ?? ''));
 $destino = trim((string) ($_POST['destino'] ?? ''));
 $cantidad = $_POST['cantidad'] ?? '';
 $fechaOp = trim((string) ($_POST['fecha_operacion'] ?? ''));
@@ -49,6 +88,7 @@ $ubicacion = trim((string) ($_POST['ubicacion'] ?? ''));
 $conductor = trim((string) ($_POST['conductor'] ?? ''));
 $conductorNuevo = trim((string) ($_POST['conductor_nuevo'] ?? ''));
 $vehiculo = trim((string) ($_POST['vehiculo'] ?? ''));
+$vehiculoNuevo = trim((string) ($_POST['vehiculo_nuevo'] ?? ''));
 $estadoAct = trim((string) ($_POST['estado_actividad'] ?? 'PROGRAMADO'));
 $cantOk = trim((string) ($_POST['cantidad_correcta'] ?? ''));
 $prodOk = trim((string) ($_POST['producto_correcto'] ?? ''));
@@ -57,8 +97,33 @@ $dirOk = trim((string) ($_POST['direccion_correcta'] ?? ''));
 $pedidoPerf = trim((string) ($_POST['pedido_perfecto'] ?? ''));
 $telefono = trim((string) ($_POST['telefono'] ?? ''));
 
-if ($plantaOp === '' || $cliente === '' || $actividad === '' || $fechaOp === '' || $cantidad === '' || $cantidad === null) {
-    die('Faltan datos obligatorios (planta, cliente, actividad, fecha de operación o cantidad).');
+if ($plantaOp === '' || $actividad === '' || $fechaOp === '' || $cantidad === '' || $cantidad === null) {
+    die('Faltan datos obligatorios (planta, actividad, fecha de operación o cantidad).');
+}
+
+if ($clienteNuevo !== '' && lm_es_admin()) {
+    $idC = programacion_alta_maestro_id_nombre($pdo, 'clientes', 'ID_Cliente', 'Cliente', $clienteNuevo);
+    if ($idC !== null) {
+        $cliente = $idC;
+    }
+}
+if ($cliente === '') {
+    die('Falta el cliente: elija uno del listado o cree uno nuevo (solo administradores).');
+}
+
+if ($oplNuevo !== '' && lm_es_admin()) {
+    $idO = programacion_alta_maestro_id_nombre($pdo, 'opl', 'ID_OPL', 'OPL', $oplNuevo);
+    if ($idO !== null) {
+        $opl = $idO;
+        unset($_SESSION['lm_opl_rel_cache_v1']);
+    }
+}
+
+if ($vehiculoNuevo !== '' && lm_es_admin()) {
+    $idV = programacion_alta_maestro_id_nombre($pdo, 'vehiculo', 'ID_Vehiculo', 'Vehiculo', $vehiculoNuevo);
+    if ($idV !== null) {
+        $vehiculo = $idV;
+    }
 }
 
 if (!programacion_es_producto_valido($plantaOp, $producto)) {
@@ -117,21 +182,25 @@ $estadoPedido = in_array($estadoPedido, $estadoPedidoPermitidos, true) ? $estado
 $estadoAct = in_array($estadoAct, $estadoActividadPermitidos, true) ? $estadoAct : 'PROGRAMADO';
 
 if ($conductorNuevo !== '' && lm_es_admin()) {
-    try {
-        $buscarExistente = $pdo->prepare('SELECT ID_Conductor FROM conductor WHERE UPPER(TRIM(Conductor)) = UPPER(TRIM(?)) LIMIT 1');
-        $buscarExistente->execute([$conductorNuevo]);
-        $idExistente = $buscarExistente->fetchColumn();
-        if ($idExistente !== false && $idExistente !== null && trim((string) $idExistente) !== '') {
-            $conductor = trim((string) $idExistente);
-        } else {
-            $max = $pdo->query("SELECT MAX(CAST(ID_Conductor AS UNSIGNED)) FROM conductor WHERE ID_Conductor REGEXP '^[0-9]+$'")->fetchColumn();
-            $nuevoId = ($max !== null && $max !== false && $max !== '') ? (string) ((int) $max + 1) : substr(bin2hex(random_bytes(4)), 0, 8);
-            $insertConductor = $pdo->prepare('INSERT INTO conductor (ID_Conductor, Conductor) VALUES (?, ?)');
-            $insertConductor->execute([$nuevoId, $conductorNuevo]);
-            $conductor = $nuevoId;
-        }
-    } catch (Throwable) {
-        // Si falla alta de conductor, conserva el valor elegido y sigue el flujo normal.
+    $idCond = programacion_alta_maestro_id_nombre($pdo, 'conductor', 'ID_Conductor', 'Conductor', $conductorNuevo);
+    if ($idCond !== null) {
+        $conductor = $idCond;
+    }
+}
+
+/** Tras resolver conductor/vehículo: vínculo OPL ↔ logisticos (misma lógica que gestion_tabla al crear OPL). */
+if (lm_es_admin() && $oplNuevo !== '' && trim($opl) !== '') {
+    $oplVincCond = trim((string) ($_POST['opl_vinculo_conductor'] ?? ''));
+    $oplVincVeh = trim((string) ($_POST['opl_vinculo_vehiculo'] ?? ''));
+    $oplMismaProg = isset($_POST['opl_vinculo_misma_programacion']) && (string) $_POST['opl_vinculo_misma_programacion'] === '1';
+    $vc = ($oplVincCond !== '' && $oplVincVeh !== '') ? $oplVincCond : '';
+    $vv = ($oplVincCond !== '' && $oplVincVeh !== '') ? $oplVincVeh : '';
+    if ($vc === '' && $vv === '' && $oplMismaProg) {
+        $vc = trim((string) $conductor);
+        $vv = trim((string) $vehiculo);
+    }
+    if ($vc !== '' && $vv !== '' && logisticos_maestro_insertar_triple($pdo, trim($opl), $vc, $vv)) {
+        unset($_SESSION['lm_opl_rel_cache_v1']);
     }
 }
 
@@ -141,7 +210,7 @@ try {
 } catch (Throwable) {
 }
 $relO = programacion_opl_relaciones($pdo, $oplsMaestro);
-if ($relO['usaFiltro'] && trim($opl) !== '' && $conductorNuevo === '') {
+if ($relO['usaFiltro'] && trim($opl) !== '' && $conductorNuevo === '' && $vehiculoNuevo === '') {
     $bk = $relO['porOpl'][trim($opl)] ?? null;
     if ($bk !== null && !programacion_opl_permite_conductor_vehiculo($bk, $conductor, $vehiculo)) {
         die('El conductor o el vehículo no corresponden a la OPL elegida. Elija una combinación permitida o deje ambos vacíos.');

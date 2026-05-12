@@ -8,7 +8,7 @@ require_once __DIR__ . '/config/programacion_opl_logistica.php';
 
 $idProgGen = programacion_generar_id_programacion();
 $nextInterno = programacion_siguiente_id_interno_preview($pdo);
-$puedeCrearConductor = lm_es_admin();
+$puedeCrearMaestros = lm_es_admin();
 
 $clientes = $pdo->query('SELECT ID_Cliente, Cliente FROM Clientes ORDER BY Cliente ASC')->fetchAll(PDO::FETCH_ASSOC);
 $actividades = $pdo->query('SELECT ID_Actividad, Actividad FROM Actividad ORDER BY Actividad ASC')->fetchAll(PDO::FETCH_ASSOC);
@@ -239,12 +239,21 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Cliente *</label>
-                    <select name="cliente" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <select name="cliente" id="cliente_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" <?= $puedeCrearMaestros ? '' : 'required' ?>>
                         <option value="">— Elegir —</option>
                         <?php foreach ($clientes as $c): ?>
                             <option value="<?= htmlspecialchars((string) $c['ID_Cliente']) ?>"><?= htmlspecialchars((string) $c['Cliente']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <?php if ($puedeCrearMaestros): ?>
+                    <button type="button" id="btn_nuevo_cliente" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
+                        + Crear nuevo cliente
+                    </button>
+                    <div id="wrap_nuevo_cliente" class="mt-2 hidden">
+                        <input type="text" id="cliente_nuevo_texto" name="cliente_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Nombre del nuevo cliente" autocomplete="off">
+                        <p class="mt-1 text-[10px] text-emerald-800 font-semibold leading-snug">Como en <strong>Configuración › Clientes</strong>: solo nombre e ID automático. Si el maestro exige más columnas obligatorias, créelo en maestros; quedará disponible para todos.</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
 
@@ -306,6 +315,37 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                         <?php endforeach; ?>
                     </select>
                     <p id="opl_rel_aviso" class="mt-1 text-[10px] text-slate-500 font-semibold leading-snug"></p>
+                    <?php if ($puedeCrearMaestros): ?>
+                    <button type="button" id="btn_nuevo_opl" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
+                        + Crear nueva OPL
+                    </button>
+                    <div id="wrap_nuevo_opl" class="mt-2 hidden space-y-3">
+                        <input type="text" id="opl_nuevo_texto" name="opl_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Nombre de la nueva OPL" autocomplete="off">
+                        <div class="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/50">
+                            <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-1">Relación OPL (logísticos)</p>
+                            <p class="text-[10px] font-semibold text-emerald-900 mb-3 leading-relaxed">Igual que en <strong>Configuración › OPL</strong>: opcionalmente relacione esta OPL con un conductor y un vehículo existentes en la tabla puente. Si no completa esto, podrá hacerlo después en maestros.</p>
+                            <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Conductor existente</label>
+                            <select name="opl_vinculo_conductor" id="opl_vinculo_conductor" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 mb-2">
+                                <option value="">— Opcional —</option>
+                                <?php foreach ($conductores as $co): ?>
+                                    <option value="<?= htmlspecialchars((string) $co['ID_Conductor']) ?>"><?= htmlspecialchars((string) $co['Conductor']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Vehículo existente</label>
+                            <select name="opl_vinculo_vehiculo" id="opl_vinculo_vehiculo" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800 mb-3">
+                                <option value="">— Opcional —</option>
+                                <?php foreach ($vehiculos as $v): ?>
+                                    <option value="<?= htmlspecialchars((string) $v['ID_Vehiculo']) ?>"><?= htmlspecialchars((string) $v['Vehiculo']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <label class="flex items-start gap-2 cursor-pointer">
+                                <input type="checkbox" name="opl_vinculo_misma_programacion" id="opl_vinculo_misma_programacion" value="1" class="mt-1 rounded border-emerald-300 text-emerald-700 focus:ring-emerald-500">
+                                <span class="text-[10px] font-semibold text-emerald-900 leading-snug">Usar el <strong>conductor</strong> y <strong>vehículo</strong> elegidos más abajo en esta misma programación (incluye si los acaba de crear como «nuevos»). Solo aplica si no eligió ambos en los desplegables de arriba.</span>
+                            </label>
+                        </div>
+                        <p class="text-[10px] text-emerald-700 font-semibold">Se guardará la fila en el maestro OPL; el vínculo en logísticos requiere conductor y vehículo (existentes o los de esta pantalla con la casilla).</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Conductor</label>
@@ -315,7 +355,7 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                             <option value="<?= htmlspecialchars((string) $co['ID_Conductor']) ?>"><?= htmlspecialchars((string) $co['Conductor']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if ($puedeCrearConductor): ?>
+                    <?php if ($puedeCrearMaestros): ?>
                     <button type="button" id="btn_nuevo_conductor" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
                         + Crear nuevo conductor
                     </button>
@@ -333,6 +373,15 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                             <option value="<?= htmlspecialchars((string) $v['ID_Vehiculo']) ?>"><?= htmlspecialchars((string) $v['Vehiculo']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <?php if ($puedeCrearMaestros): ?>
+                    <button type="button" id="btn_nuevo_vehiculo" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
+                        + Crear nuevo vehículo
+                    </button>
+                    <div id="wrap_nuevo_vehiculo" class="mt-2 hidden">
+                        <input type="text" id="vehiculo_nuevo_texto" name="vehiculo_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Nombre o placa del nuevo vehículo" autocomplete="off">
+                        <p class="mt-1 text-[10px] text-emerald-800 font-semibold leading-snug">Paridad con <strong>Configuración › Vehículos</strong>: registro mínimo (ID + texto). Campos adicionales del maestro debe cargarlos en configuración si hace falta.</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
 
@@ -390,9 +439,7 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
             var selOpl = document.getElementById('opl_select');
             var selVeh = document.getElementById('vehiculo_select');
             var avisoOpl = document.getElementById('opl_rel_aviso');
-            var btnNuevoConductor = document.getElementById('btn_nuevo_conductor');
-            var wrapNuevoConductor = document.getElementById('wrap_nuevo_conductor');
-            var txtNuevoConductor = document.getElementById('conductor_nuevo_texto');
+            var puedeCrearMaestros = <?= $puedeCrearMaestros ? 'true' : 'false' ?>;
             var selectConductor = document.getElementById('conductor_select');
             function repoblarSelect(select, items, idsPermitidos, labelVacio) {
                 if (!select) return;
@@ -462,6 +509,43 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     }
                 }
             }
+            function wireCrearNuevo(btnId, wrapId, txtId, selectEl, onToggle) {
+                var btn = document.getElementById(btnId);
+                var wrap = document.getElementById(wrapId);
+                var txt = document.getElementById(txtId);
+                if (!btn || !wrap || !txt) return;
+                btn.addEventListener('click', function () {
+                    var estabaOculto = wrap.classList.contains('hidden');
+                    wrap.classList.toggle('hidden', !estabaOculto);
+                    if (!estabaOculto) {
+                        txt.value = '';
+                        if (selectEl === selOpl || selectEl === selVeh) {
+                            refreshOplFiltros();
+                        }
+                    }
+                    if (typeof onToggle === 'function') {
+                        onToggle(estabaOculto);
+                    }
+                    if (estabaOculto) {
+                        txt.focus();
+                    }
+                });
+                if (selectEl) {
+                    selectEl.addEventListener('change', function () {
+                        if (selectEl.value !== '') {
+                            txt.value = '';
+                        }
+                    });
+                }
+                txt.addEventListener('input', function () {
+                    if (txt.value.trim() !== '' && selectEl) {
+                        selectEl.value = '';
+                    }
+                    if (selectEl === selOpl || selectEl === selVeh) {
+                        refreshOplFiltros();
+                    }
+                });
+            }
             function refillProd() {
                 var k = planta.value;
                 var list = prodMap[k] || [];
@@ -492,33 +576,39 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
             }
             planta.addEventListener('change', function () { refillProd(); refillCuarteo(); });
             prod.addEventListener('change', refillCuarteo);
-            if (btnNuevoConductor && wrapNuevoConductor && txtNuevoConductor) {
-                btnNuevoConductor.addEventListener('click', function () {
-                    var oculto = wrapNuevoConductor.classList.contains('hidden');
-                    wrapNuevoConductor.classList.toggle('hidden', !oculto);
-                    if (oculto) {
-                        txtNuevoConductor.focus();
-                    } else {
-                        txtNuevoConductor.value = '';
-                    }
-                });
-                if (selectConductor) {
-                    selectConductor.addEventListener('change', function () {
-                        if (selectConductor.value !== '') {
-                            txtNuevoConductor.value = '';
-                        }
-                    });
-                }
-                txtNuevoConductor.addEventListener('input', function () {
-                    if (txtNuevoConductor.value.trim() !== '' && selectConductor) {
-                        selectConductor.value = '';
-                    }
-                });
+            function limpiarOplNuevoExtras() {
+                var s1 = document.getElementById('opl_vinculo_conductor');
+                var s2 = document.getElementById('opl_vinculo_vehiculo');
+                var cb = document.getElementById('opl_vinculo_misma_programacion');
+                if (s1) s1.value = '';
+                if (s2) s2.value = '';
+                if (cb) cb.checked = false;
             }
+            wireCrearNuevo('btn_nuevo_cliente', 'wrap_nuevo_cliente', 'cliente_nuevo_texto', document.getElementById('cliente_select'));
+            wireCrearNuevo('btn_nuevo_opl', 'wrap_nuevo_opl', 'opl_nuevo_texto', selOpl, function (abrioDesdeOculto) {
+                if (!abrioDesdeOculto) {
+                    limpiarOplNuevoExtras();
+                }
+            });
+            wireCrearNuevo('btn_nuevo_vehiculo', 'wrap_nuevo_vehiculo', 'vehiculo_nuevo_texto', selVeh);
+            wireCrearNuevo('btn_nuevo_conductor', 'wrap_nuevo_conductor', 'conductor_nuevo_texto', selectConductor);
             refillProd();
             refillCuarteo();
             if (selOpl) selOpl.addEventListener('change', refreshOplFiltros);
             refreshOplFiltros();
+            var formProg = document.querySelector('form[action="procesar_programacion.php"]');
+            if (formProg && puedeCrearMaestros) {
+                formProg.addEventListener('submit', function (ev) {
+                    var cs = document.getElementById('cliente_select');
+                    var ct = document.getElementById('cliente_nuevo_texto');
+                    if (!cs || !ct) return;
+                    var ok = (cs.value && String(cs.value).trim() !== '') || (ct.value && ct.value.trim() !== '');
+                    if (!ok) {
+                        ev.preventDefault();
+                        window.alert('Seleccione un cliente o indique el nombre del cliente nuevo.');
+                    }
+                });
+            }
         })();
         </script>
         <?php mostrarFooter(); ?>
