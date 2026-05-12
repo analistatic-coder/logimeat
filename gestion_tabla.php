@@ -49,6 +49,10 @@ if ($columna_pk === null) {
 
 $es_tabla_empleado = strtolower($tabla_get) === 'empleado';
 $empleado_cedula_como_pk = $es_tabla_empleado && strtoupper((string) $columna_pk) === 'ID_EMPLEADO';
+$camposEmpleadoLower = $es_tabla_empleado
+    ? array_map(static fn (string $f): string => strtolower($f), array_column($columnas_info, 'Field'))
+    : [];
+$empleadoTienePuestoTrabajo = $es_tabla_empleado && in_array('puesto_trabajo', $camposEmpleadoLower, true);
 $es_tabla_user = strtolower($tabla_get) === 'user';
 
 /**
@@ -160,22 +164,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                     }
                 }
             } else {
+                $oldPkRef = trim((string) $id_interno_referencia);
+                $nuevoPkEmpleado = '';
+                if ($empleado_cedula_como_pk && $columna_pk) {
+                    $nuevoPkEmpleado = trim((string) ($datos_post[$columna_pk] ?? ''));
+                }
                 if ($columna_pk && isset($datos_post[$columna_pk])) {
                     unset($datos_post[$columna_pk]);
                 }
-                $columnas_sql = array_keys($datos_post);
-                $set_query = implode('=?, ', $columnas_sql) . '=?';
-                $colPk = str_replace('`', '``', $columna_pk);
-                $sql = "UPDATE `$tabla_get` SET $set_query WHERE `$colPk` = ?";
-                $params = array_values($datos_post);
-                $params[] = $id_interno_referencia;
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($params);
-                if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
-                    $idOplEditado = trim((string) ($datos_post[$columna_id_maestro] ?? ''));
-                    if ($idOplEditado !== '' && $vincConductor !== '' && $vincVehiculo !== '') {
-                        logisticos_maestro_insertar_triple($pdo, $idOplEditado, $vincConductor, $vincVehiculo);
+                $txEmpleadoPk = $empleado_cedula_como_pk && $nuevoPkEmpleado !== '' && $nuevoPkEmpleado !== $oldPkRef;
+                if ($txEmpleadoPk) {
+                    $pdo->beginTransaction();
+                }
+                try {
+                    if ($txEmpleadoPk) {
+                        $pdo->prepare('UPDATE empleado_descanso SET `ID_Empleado`=? WHERE `ID_Empleado`=?')->execute([$nuevoPkEmpleado, $oldPkRef]);
+                        $pdo->prepare('UPDATE empleado_programacion SET `ID_Empleado`=? WHERE `ID_Empleado`=?')->execute([$nuevoPkEmpleado, $oldPkRef]);
+                        $datos_post[$columna_pk] = $nuevoPkEmpleado;
                     }
+                    $columnas_sql = array_keys($datos_post);
+                    $set_query = implode('=?, ', $columnas_sql) . '=?';
+                    $colPk = str_replace('`', '``', $columna_pk);
+                    $sql = "UPDATE `$tabla_get` SET $set_query WHERE `$colPk` = ?";
+                    $params = array_values($datos_post);
+                    $params[] = $id_interno_referencia;
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($params);
+                    if ($txEmpleadoPk) {
+                        $pdo->commit();
+                    }
+                    if (strtolower($tabla_get) === 'opl' && $columna_id_maestro) {
+                        $idOplEditado = trim((string) ($datos_post[$columna_id_maestro] ?? ''));
+                        if ($idOplEditado !== '' && $vincConductor !== '' && $vincVehiculo !== '') {
+                            logisticos_maestro_insertar_triple($pdo, $idOplEditado, $vincConductor, $vincVehiculo);
+                        }
+                    }
+                } catch (PDOException $eUpd) {
+                    if ($txEmpleadoPk && $pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    throw $eUpd;
                 }
             }
         }
@@ -357,6 +385,9 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
         const columnasLista = <?= json_encode($columnas_vista) ?>;
         const columnaPk = <?= json_encode($columna_pk) ?>;
         const empleadoCedulaComoPk = <?= $empleado_cedula_como_pk ? 'true' : 'false' ?>;
+        const esTablaEmpleado = <?= $es_tabla_empleado ? 'true' : 'false' ?>;
+        const empleadoTienePuestoTrabajo = <?= $empleadoTienePuestoTrabajo ? 'true' : 'false' ?>;
+        const puestosTrabajoEmpleado = <?= json_encode(['Visceras', 'Subproductos', 'Canales', 'Pieles', 'Desposte'], JSON_UNESCAPED_UNICODE) ?>;
         const esTablaUser = <?= $es_tabla_user ? 'true' : 'false' ?>;
         const esTablaOpl = <?= strtolower($tabla_get) === 'opl' ? 'true' : 'false' ?>;
         const opcionesRelacionOpl = <?= json_encode($opcionesRelacionOpl, JSON_UNESCAPED_UNICODE) ?>;
@@ -479,7 +510,54 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 
                 let field = null;
                 const colLower = col.toLowerCase();
-                if (esTablaUser && Object.prototype.hasOwnProperty.call(opcionesPorColumnaUser, colLower)) {
+                if (esTablaEmpleado && colLower === 'activo') {
+                    label.innerText = 'Estado (Activo / Inactivo)';
+                    const select = document.createElement('select');
+                    select.name = col;
+                    select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
+                    const valorActual = String(datosActuales[col] || '').trim();
+                    let vNorm = valorActual.toUpperCase();
+                    if (vNorm === 'ACTIVO' || vNorm === 'TRUE' || vNorm === '1') vNorm = 'SI';
+                    if (vNorm === 'INACTIVO' || vNorm === 'FALSE' || vNorm === '0') vNorm = 'NO';
+                    const pares = [['SI', 'ACTIVO'], ['NO', 'INACTIVO']];
+                    pares.forEach(function (pair) {
+                        const opt = document.createElement('option');
+                        opt.value = pair[0];
+                        opt.textContent = pair[1];
+                        if (pair[0] === vNorm || (!esEdicion && pair[0] === 'SI' && vNorm === '')) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                    field = select;
+                } else if (esTablaEmpleado && empleadoTienePuestoTrabajo && colLower === 'puesto_trabajo') {
+                    label.innerText = 'Puesto de trabajo';
+                    const select = document.createElement('select');
+                    select.name = col;
+                    select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
+                    const first = document.createElement('option');
+                    first.value = '';
+                    first.textContent = '— Elegir —';
+                    select.appendChild(first);
+                    const valPt = String(datosActuales[col] || '').trim();
+                    (puestosTrabajoEmpleado || []).forEach(function (nom) {
+                        const opt = document.createElement('option');
+                        opt.value = nom;
+                        opt.textContent = nom;
+                        if (valPt !== '' && valPt === nom) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                    if (valPt !== '' && !(puestosTrabajoEmpleado || []).includes(valPt)) {
+                        const optX = document.createElement('option');
+                        optX.value = valPt;
+                        optX.textContent = valPt;
+                        optX.selected = true;
+                        select.appendChild(optX);
+                    }
+                    field = select;
+                } else if (esTablaUser && Object.prototype.hasOwnProperty.call(opcionesPorColumnaUser, colLower)) {
                     const select = document.createElement('select');
                     select.name = col;
                     select.className = "w-full p-3 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all bg-white";
@@ -519,9 +597,12 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                 
                 // --- REGLAS DE BLOQUEO Y ESTILO ---
                 if (columnaPk && col.toLowerCase() === String(columnaPk).toLowerCase()) {
-                    if (empleadoCedulaComoPk && !esEdicion) {
+                    if (empleadoCedulaComoPk) {
                         if (field.tagName === 'INPUT') {
                             field.placeholder = 'Cédula (ID empleado)';
+                            field.readOnly = false;
+                            field.removeAttribute('readonly');
+                            field.tabIndex = 0;
                         }
                     } else {
                         if (field.tagName === 'INPUT') {
@@ -533,6 +614,13 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         }
                         field.classList.add('id-interno-style');
                     }
+                } else if (colLower === 'id_interno' && empleadoCedulaComoPk) {
+                    if (field.tagName === 'INPUT') {
+                        field.readOnly = true;
+                        field.tabIndex = -1;
+                        field.autocomplete = 'off';
+                    }
+                    field.classList.add('id-interno-style');
                 } else if (col === nombreColIDNegocio) {
                     if (field.tagName === 'INPUT') {
                         field.readOnly = true;

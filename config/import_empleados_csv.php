@@ -92,8 +92,9 @@ function importarEmpleadosDesdeCarpeta(PDO $pdo, string $baseDir, ?array $mapaAr
                 $ixFi = $indiceColumna($headers, ['Fecha_Ingreso', 'fecha_ingreso', 'Ingreso']);
                 $ixAc = $indiceColumna($headers, ['Activo', 'activo']);
                 $ixOb = $indiceColumna($headers, ['Observaciones', 'observaciones', 'Notas']);
+                $ixPt = $indiceColumna($headers, ['Puesto_Trabajo', 'puesto_trabajo', 'Puesto de trabajo']);
                 // Solo inserción de filas nuevas (clave de negocio ID_Empleado). No DELETE/UPDATE: no altera IDs ni rompe referencias en descansos/programación.
-                $sql = 'INSERT IGNORE INTO empleado (ID_Empleado,Tipo_Documento,Numero_Documento,Nombre_Completo,Cargo,Area,Telefono,Email,Fecha_Ingreso,Activo,Observaciones) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
+                $sql = 'INSERT IGNORE INTO empleado (ID_Empleado,Tipo_Documento,Numero_Documento,Nombre_Completo,Cargo,Area,Puesto_Trabajo,Telefono,Email,Fecha_Ingreso,Activo,Observaciones) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
                 $st = $pdo->prepare($sql);
                 for ($i = 1; $i < count($data); $i++) {
                     $row = $data[$i];
@@ -107,6 +108,7 @@ function importarEmpleadosDesdeCarpeta(PDO $pdo, string $baseDir, ?array $mapaAr
                         trim((string) $row[$ixN]),
                         $ixC !== null ? trim((string) ($row[$ixC] ?? '')) : null,
                         $ixA !== null ? trim((string) ($row[$ixA] ?? '')) : null,
+                        $ixPt !== null ? trim((string) ($row[$ixPt] ?? '')) : null,
                         $ixT !== null ? trim((string) ($row[$ixT] ?? '')) : null,
                         $ixM !== null ? trim((string) ($row[$ixM] ?? '')) : null,
                         $ixFi !== null ? trim((string) ($row[$ixFi] ?? '')) : null,
@@ -488,7 +490,7 @@ function importarEmpleadosDesdeLogimeatPersonalUtf8(PDO $pdo, ?string $path = nu
     $ixEst = $map['estado'] ?? null;
 
     // Solo filas nuevas por ID_Empleado (cédula); no modifica PK de negocio ni tablas vinculadas por ID_Empleado.
-    $sql = 'INSERT IGNORE INTO empleado (ID_Empleado,Tipo_Documento,Numero_Documento,Nombre_Completo,Cargo,Area,Telefono,Email,Fecha_Ingreso,Activo,Observaciones) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
+    $sql = 'INSERT IGNORE INTO empleado (ID_Empleado,Tipo_Documento,Numero_Documento,Nombre_Completo,Cargo,Area,Puesto_Trabajo,Telefono,Email,Fecha_Ingreso,Activo,Observaciones) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
     $st = $pdo->prepare($sql);
 
     $insertados = 0;
@@ -548,6 +550,7 @@ function importarEmpleadosDesdeLogimeatPersonalUtf8(PDO $pdo, ?string $path = nu
                 $nombre,
                 $cargo !== '' ? $cargo : null,
                 $area !== '' ? $area : null,
+                null,
                 $tel !== '' ? $tel : null,
                 null,
                 $fechaIng,

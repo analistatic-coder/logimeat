@@ -10,12 +10,15 @@ CREATE TABLE IF NOT EXISTS empleado (
   Nombre_Completo VARCHAR(255) NOT NULL,
   Cargo VARCHAR(255) DEFAULT NULL,
   Area VARCHAR(128) DEFAULT NULL,
+  Puesto_Trabajo VARCHAR(64) DEFAULT NULL,
   Telefono VARCHAR(64) DEFAULT NULL,
   Email VARCHAR(255) DEFAULT NULL,
   Fecha_Ingreso VARCHAR(32) DEFAULT NULL,
   Activo VARCHAR(8) DEFAULT 'SI',
   Observaciones TEXT,
+  id_interno INT UNSIGNED NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (ID_Empleado),
+  UNIQUE KEY uk_empleado_id_interno (id_interno),
   KEY idx_empleado_doc (Numero_Documento)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

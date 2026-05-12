@@ -286,7 +286,7 @@ function lm_empleados_disponibles_programacion(
     ?int $excluirProgIdInterno,
     ?string $forzarIdEmpleado
 ): array {
-    $q = $pdo->query("SELECT ID_Empleado, Nombre_Completo FROM empleado WHERE Activo IS NULL OR UPPER(TRIM(COALESCE(Activo,''))) IN ('SI','S','1','TRUE','YES') ORDER BY Nombre_Completo");
+    $q = $pdo->query("SELECT ID_Empleado, Nombre_Completo FROM empleado WHERE Activo IS NULL OR UPPER(TRIM(COALESCE(Activo,''))) IN ('SI','S','1','TRUE','YES','ACTIVO') ORDER BY Nombre_Completo");
     $rows = $q ? $q->fetchAll(PDO::FETCH_ASSOC) : [];
     $out = [];
     foreach ($rows as $e) {
@@ -312,7 +312,7 @@ function lm_empleados_disponibles_descanso(
     ?int $excluirDescansoIdInterno,
     ?string $forzarIdEmpleado
 ): array {
-    $q = $pdo->query("SELECT ID_Empleado, Nombre_Completo FROM empleado WHERE Activo IS NULL OR UPPER(TRIM(COALESCE(Activo,''))) IN ('SI','S','1','TRUE','YES') ORDER BY Nombre_Completo");
+    $q = $pdo->query("SELECT ID_Empleado, Nombre_Completo FROM empleado WHERE Activo IS NULL OR UPPER(TRIM(COALESCE(Activo,''))) IN ('SI','S','1','TRUE','YES','ACTIVO') ORDER BY Nombre_Completo");
     $rows = $q ? $q->fetchAll(PDO::FETCH_ASSOC) : [];
     $out = [];
     foreach ($rows as $e) {
