@@ -45,6 +45,15 @@ foreach($columnas_info as $c) {
         if(!$columna_id_maestro) $columna_id_maestro = $campo;
     }
 }
+if (strtolower($tabla_get) === 'empleado_programacion') {
+    foreach ($columnas_info as $c) {
+        $f = (string) ($c['Field'] ?? '');
+        if (strtolower($f) === 'id_programacion') {
+            $columna_id_maestro = $f;
+            break;
+        }
+    }
+}
 if ($columna_pk === null) {
     $columna_pk = 'id_interno';
 }
@@ -257,8 +266,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $es_admin) {
                     if (trim((string) ($datos_post['Actividad'] ?? '')) === '') {
                         $datos_post['Actividad'] = $actDefP !== '' ? $actDefP : 'TRASLADO A PCC';
                     }
-                    if (trim((string) ($datos_post['ID_Programacion'] ?? '')) === '') {
-                        $datos_post['ID_Programacion'] = substr(bin2hex(random_bytes(4)), 0, 8);
+                    foreach (array_keys($datos_post) as $kIk) {
+                        if (strtolower((string) $kIk) === 'id_interno') {
+                            unset($datos_post[$kIk]);
+                            break;
+                        }
+                    }
+                    $kProgCol = null;
+                    foreach (array_keys($datos_post) as $kIk) {
+                        if (strtolower((string) $kIk) === 'id_programacion') {
+                            $kProgCol = $kIk;
+                            break;
+                        }
+                    }
+                    if ($kProgCol !== null) {
+                        $idProgIn = trim((string) ($datos_post[$kProgCol] ?? ''));
+                        if ($idProgIn === '') {
+                            $idProgIn = substr(bin2hex(random_bytes(4)), 0, 8);
+                        }
+                        $colEscProg = str_replace('`', '``', $kProgCol);
+                        for ($g = 0; $g < 16; $g++) {
+                            $chkP = $pdo->prepare("SELECT 1 FROM `empleado_programacion` WHERE `$colEscProg` = ? LIMIT 1");
+                            $chkP->execute([$idProgIn]);
+                            if (!$chkP->fetchColumn()) {
+                                break;
+                            }
+                            $idProgIn = substr(bin2hex(random_bytes(4)), 0, 8);
+                        }
+                        $datos_post[$kProgCol] = $idProgIn;
                     }
                     $idEmpProg = trim((string) ($datos_post['ID_Empleado'] ?? ''));
                     if ($idEmpProg === '') {
@@ -460,6 +495,7 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             <div class="mb-4 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-[11px] text-sky-900 leading-relaxed">
                 <strong>Nuevo registro:</strong> el desplegable <strong>Empleado</strong> muestra solo personal <strong>activo</strong>, sin descanso ni otro turno ya programado para
                 <strong><?= htmlspecialchars($progSelDia) ?></strong>, semana ISO <strong><?= (int) $progSelSem ?></strong> de <strong><?= (int) $progSelAnio ?></strong>.
+                <strong>Duplicar</strong> copia el resto de campos pero asigna <strong>nuevo código interno</strong> e <strong>ID de programación</strong> como al pulsar «Nuevo registro» (no reutiliza los del registro origen).
                 <a class="font-black text-sky-800 underline ml-1" href="gestion_tabla.php?<?= htmlspecialchars(http_build_query(['tabla' => 'empleado_programacion', 'prog_anio' => (int) date('o'), 'prog_semana' => (int) date('W'), 'prog_dia' => 'LUNES'])) ?>">Ir a semana actual</a>
             </div>
             <?php endif; ?>
@@ -487,14 +523,19 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         <tbody class="divide-y divide-slate-100">
                             <?php foreach($filas as $f): ?>
                             <tr class="row-data hover:bg-blue-50/50 cursor-pointer transition-all" 
-                                <?php if($es_admin): ?> onclick='prepararEdicion(<?= json_encode($f) ?>)' <?php endif; ?>>
+                                <?php if($es_admin): ?> onclick='prepararEdicion(<?= json_encode($f, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' <?php endif; ?>>
                                 <?php foreach($f as $col_name => $valor): ?>
                                     <td class="p-4 font-bold <?php if(strtolower((string)$col_name)===strtolower((string)$columna_pk)) echo 'text-blue-600/60'; else echo 'text-slate-700'; ?>">
                                         <?= htmlspecialchars($valor ?? '0') ?>
                                     </td>
                                 <?php endforeach; ?>
                                 <?php if($es_admin): ?>
-                                    <td class="p-4 text-center text-blue-600 font-black tracking-tighter">EDITAR ❯</td>
+                                    <td class="p-4 text-center" onclick="event.stopPropagation();">
+                                        <?php if ($es_tabla_empleado_programacion): ?>
+                                        <button type="button" class="block w-full mb-2 py-1.5 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-800 text-[9px] font-black uppercase tracking-tight hover:bg-emerald-100" onclick="event.stopPropagation(); duplicarEmpleadoProgramacionDesdeFila(<?= htmlspecialchars(json_encode($f, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>);">Duplicar</button>
+                                        <?php endif; ?>
+                                        <button type="button" class="text-blue-600 font-black tracking-tighter text-[10px] uppercase hover:underline" onclick="event.stopPropagation(); prepararEdicion(<?= htmlspecialchars(json_encode($f, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>);">Editar</button>
+                                    </td>
                                 <?php endif; ?>
                             </tr>
                             <?php endforeach; ?>
@@ -678,6 +719,37 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
             if (!esTablaEmpleadoProgramacion) {
                 agregarRelacionOplEnEdicion(datosFila);
             }
+            mostrarModal();
+        }
+
+        function duplicarEmpleadoProgramacionDesdeFila(fila) {
+            if (!esTablaEmpleadoProgramacion || !fila || typeof fila !== 'object') {
+                return;
+            }
+            document.getElementById('modalTitulo').innerText = 'Nuevo registro (copiado)';
+            document.getElementById('formAction').value = 'crear';
+            document.getElementById('formIdInternoHidden').value = '';
+            const copia = Object.assign({}, fila);
+            const pk = columnaPk || 'id_interno';
+            Object.keys(copia).forEach(function (k) {
+                if (String(k).toLowerCase() === String(pk).toLowerCase()) {
+                    delete copia[k];
+                }
+                if (String(k).toLowerCase() === 'id_programacion') {
+                    copia[k] = '';
+                }
+            });
+            if (proximoIdInterno !== null && proximoIdInterno !== undefined) {
+                const colInt = columnasLista.find(function (c) { return String(c).toLowerCase() === 'id_interno'; });
+                if (colInt) {
+                    copia[colInt] = String(proximoIdInterno);
+                }
+            }
+            if (nombreColIDNegocio && !esTablaEmpleadoProgramacion) {
+                const esColIde = String(nombreColIDNegocio).toLowerCase() === 'id_empleado';
+                copia[nombreColIDNegocio] = (empleadoIdEmpleadoManual && esColIde) ? '' : proximoID;
+            }
+            renderizarCampos(copia, false);
             mostrarModal();
         }
 
@@ -952,6 +1024,12 @@ if ($es_admin && strtolower($tabla_get) === 'opl') {
                         return;
                     }
                     var v = progFormDefaults[k];
+                    if (Object.prototype.hasOwnProperty.call(datosActuales, k)) {
+                        var ov = datosActuales[k];
+                        if (ov !== null && ov !== undefined && String(ov).trim() !== '') {
+                            v = ov;
+                        }
+                    }
                     if (v === null || v === undefined) {
                         return;
                     }

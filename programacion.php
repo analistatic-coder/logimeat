@@ -731,6 +731,9 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
                                 </td>
                                     <td class="text-slate-600 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Telefono'] ?? '')) ?></td>
                                     <td class="text-center sticky-r whitespace-nowrap">
+                                        <?php if ($puedeSeleccionColumnas): ?>
+                                        <a href="nueva_programacion.php?duplicar_de=<?= (int) ($r['id_interno'] ?? 0) ?>" class="inline-flex items-center justify-center w-7 h-7 rounded-md text-emerald-600 text-xs font-black hover:bg-emerald-50 mr-0.5" title="Duplicar como nueva programación">⎘</a>
+                                        <?php endif; ?>
                                         <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="inline-flex items-center justify-center w-7 h-7 rounded-md text-blue-600 text-sm font-black hover:bg-blue-50" title="Editar">›</a>
                                 </td>
                             </tr>

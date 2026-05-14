@@ -6,6 +6,11 @@ require_once 'conexion.php';
 require_once __DIR__ . '/config/programacion_catalogos.php';
 require_once __DIR__ . '/config/programacion_opl_logistica.php';
 
+if (isset($_GET['duplicar_de']) && (int) $_GET['duplicar_de'] > 0 && !lm_es_admin()) {
+    header('Location: programacion.php');
+    exit();
+}
+
 $idProgGen = programacion_generar_id_programacion();
 $nextInterno = programacion_siguiente_id_interno_preview($pdo);
 $puedeCrearMaestros = lm_es_admin();
@@ -119,6 +124,59 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
     ];
 }, $vehiculos), JSON_UNESCAPED_UNICODE);
 
+$esDuplicar = false;
+/** @var array<string, mixed>|null */
+$dup = null;
+$dupFechaOpYmd = '';
+$dupHoraTime = '';
+$dupPlantaOp = '';
+$dupProd = '';
+$dupTipoCuarteo = '';
+$dupIdOrigen = 0;
+
+$dupId = isset($_GET['duplicar_de']) ? (int) $_GET['duplicar_de'] : 0;
+if ($dupId > 0 && lm_es_admin()) {
+    $stDup = $pdo->prepare('SELECT * FROM Programacion WHERE id_interno = ?');
+    $stDup->execute([$dupId]);
+    $rowDup = $stDup->fetch(PDO::FETCH_ASSOC);
+    if (is_array($rowDup)) {
+        $esDuplicar = true;
+        $dup = $rowDup;
+        $dupIdOrigen = $dupId;
+        $gDup = programacion_grupo_desde_fila($rowDup);
+        $dupPlantaOp = $gDup !== '_SIN' && isset($plantas[$gDup]) ? $gDup : trim((string) ($rowDup['Planta_Operativa'] ?? ''));
+        if ($dupPlantaOp === '' || !isset($plantas[$dupPlantaOp])) {
+            $kf = array_key_first($plantas);
+            $dupPlantaOp = $kf !== null ? (string) $kf : 'BENEFICIO';
+        }
+        if (programacion_es_producto_valido($dupPlantaOp, (string) ($rowDup['Producto'] ?? ''))) {
+            $dupProd = (string) $rowDup['Producto'];
+        } else {
+            $ppx = programacion_productos_por_planta()[$dupPlantaOp] ?? [];
+            $dupProd = $ppx[0] ?? '';
+        }
+        $dupTipoCuarteo = trim((string) ($rowDup['Tipo_de_Cuarteo'] ?? ''));
+        $rawF = trim((string) ($rowDup['Fecha_de_Operacion'] ?? ''));
+        if ($rawF !== '') {
+            $dd = DateTime::createFromFormat('d/m/Y', $rawF);
+            if ($dd instanceof DateTime) {
+                $dupFechaOpYmd = $dd->format('Y-m-d');
+            } else {
+                $ts = strtotime($rawF);
+                if ($ts !== false) {
+                    $dupFechaOpYmd = date('Y-m-d', $ts);
+                }
+            }
+        }
+        $hRaw = trim((string) ($rowDup['Hora'] ?? ''));
+        if (preg_match('/(\d{1,2}):(\d{2})/', $hRaw, $hm)) {
+            $dupHoraTime = sprintf('%02d:%02d', (int) $hm[1], (int) $hm[2]);
+        }
+    }
+} elseif ($dupId > 0 && lm_es_admin()) {
+    $dupIdOrigen = $dupId;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -135,7 +193,16 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
         <header class="mb-8 flex justify-between items-start">
             <div>
                 <a href="programacion.php" class="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">← Volver</a>
-                <h1 class="text-2xl font-black text-slate-800 mt-2">Nueva programación</h1>
+                <h1 class="text-2xl font-black text-slate-800 mt-2"><?= $esDuplicar ? 'Nueva programación (copia)' : 'Nueva programación' ?></h1>
+                <?php if ($esDuplicar && $dup !== null): ?>
+                    <p class="mt-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-[11px] font-bold text-sky-900">
+                        Copiando datos del registro interno <strong>#<?= (int) $dupIdOrigen ?></strong> (ID programación origen: <?= htmlspecialchars((string) ($dup['ID_Programacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>). Ajuste lo necesario y guarde: se creará un <strong>nuevo</strong> ID de programación y código interno.
+                    </p>
+                <?php elseif ($dupId > 0 && lm_es_admin()): ?>
+                    <p class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-bold text-amber-900">
+                        No se encontró el registro a duplicar. Complete el formulario desde cero o vuelva al listado.
+                    </p>
+                <?php endif; ?>
                 <p class="text-slate-500 text-sm mt-1">Complete los campos según el registro operativo. El <strong>código interno</strong> y el <strong>ID de programación</strong> son asignados por el sistema, no se pueden editar a mano y <strong>no pueden repetirse</strong>: cada registro tiene un par de identificadores único en toda la base de datos.</p>
             </div>
         </header>
@@ -149,6 +216,11 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                 <p class="md:col-span-2 text-[11px] text-emerald-900 leading-relaxed border border-emerald-300/60 rounded-xl px-4 py-3 bg-white/70">
                     <strong>Unicidad:</strong> el código interno y el ID de programación son <strong>únicos</strong> en el sistema; <strong>ninguno puede repetirse</strong> entre filas. El código interno lo garantiza la base de datos (clave primaria); el ID de programación se controla para que no coincida con uno ya existente.
                 </p>
+                <?php if ($esDuplicar && $dup !== null): ?>
+                <p class="md:col-span-2 text-[11px] text-emerald-950 font-bold leading-relaxed border border-emerald-400/60 rounded-xl px-4 py-3 bg-white">
+                    Al <strong>duplicar</strong> es lo mismo que una <strong>nueva programación</strong>: los dos valores de abajo son los <strong>nuevos</strong> que se grabarán (no se reutilizan los del registro copiado). El resto del formulario trae los datos del origen para que solo cambie lo necesario.
+                </p>
+                <?php endif; ?>
                 <div>
                     <label class="block text-[9px] font-black text-emerald-900 uppercase mb-1">Próximo código interno (id_interno)</label>
                     <p class="text-lg font-black text-emerald-950 font-mono"><?= $nextInterno !== null ? (int) $nextInterno : '—' ?></p>
@@ -171,8 +243,10 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Solicitante</label>
                     <select name="solicitante" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Opcional —</option>
-                        <?php foreach ($solicitantes as $s): ?>
-                            <option value="<?= htmlspecialchars((string) $s['ID_Solicitante']) ?>"><?= htmlspecialchars((string) $s['Solicitante']) ?></option>
+                        <?php
+                        $dupSol = $esDuplicar && $dup !== null ? trim((string) ($dup['Solicitante'] ?? '')) : '';
+                        foreach ($solicitantes as $s): ?>
+                            <option value="<?= htmlspecialchars((string) $s['ID_Solicitante']) ?>"<?= ($dupSol !== '' && (string) $s['ID_Solicitante'] === $dupSol) ? ' selected' : '' ?>><?= htmlspecialchars((string) $s['Solicitante']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -180,8 +254,10 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Medio de comunicación</label>
                     <select name="medio_comunicacion" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Opcional —</option>
-                        <?php foreach ($medios as $m): ?>
-                            <option value="<?= htmlspecialchars((string) $m['ID_Medio_Comunicacion']) ?>"><?= htmlspecialchars((string) $m['Medio_de_Comunicacion']) ?></option>
+                        <?php
+                        $dupMed = $esDuplicar && $dup !== null ? trim((string) ($dup['Medio_de_Comunicacion'] ?? '')) : '';
+                        foreach ($medios as $m): ?>
+                            <option value="<?= htmlspecialchars((string) $m['ID_Medio_Comunicacion']) ?>"<?= ($dupMed !== '' && (string) $m['ID_Medio_Comunicacion'] === $dupMed) ? ' selected' : '' ?>><?= htmlspecialchars((string) $m['Medio_de_Comunicacion']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -196,7 +272,13 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                                         continue;
                                     }
                                 ?>
-                                <option value="<?= htmlspecialchars($labelEstado) ?>" <?= strcasecmp($labelEstado, 'PROGRAMADO') === 0 ? 'selected' : '' ?>>
+                                <option value="<?= htmlspecialchars($labelEstado) ?>" <?php
+                                    if ($esDuplicar && $dup !== null) {
+                                        echo strcasecmp($labelEstado, trim((string) ($dup['Estado'] ?? ''))) === 0 ? 'selected' : '';
+                                    } else {
+                                        echo strcasecmp($labelEstado, 'PROGRAMADO') === 0 ? 'selected' : '';
+                                    }
+                                ?>>
                                     <?= htmlspecialchars($labelEstado) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -214,7 +296,7 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Planta operativa *</label>
                     <select name="planta_operativa" id="planta_operativa" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <?php foreach ($plantas as $k => $lab): ?>
-                            <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($lab) ?></option>
+                            <option value="<?= htmlspecialchars($k) ?>"<?= ($esDuplicar && $dupPlantaOp === $k) ? ' selected' : '' ?>><?= htmlspecialchars($lab) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -232,8 +314,10 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Actividad *</label>
                     <select name="actividad" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Elegir —</option>
-                        <?php foreach ($actividades as $a): ?>
-                            <option value="<?= htmlspecialchars((string) $a['ID_Actividad']) ?>"><?= htmlspecialchars((string) $a['Actividad']) ?></option>
+                        <?php
+                        $dupAct = $esDuplicar && $dup !== null ? trim((string) ($dup['Actividad'] ?? '')) : '';
+                        foreach ($actividades as $a): ?>
+                            <option value="<?= htmlspecialchars((string) $a['ID_Actividad']) ?>"<?= ($dupAct !== '' && (string) $a['ID_Actividad'] === $dupAct) ? ' selected' : '' ?>><?= htmlspecialchars((string) $a['Actividad']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -241,8 +325,10 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Cliente *</label>
                     <select name="cliente" id="cliente_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" <?= $puedeCrearMaestros ? '' : 'required' ?>>
                         <option value="">— Elegir —</option>
-                        <?php foreach ($clientes as $c): ?>
-                            <option value="<?= htmlspecialchars((string) $c['ID_Cliente']) ?>"><?= htmlspecialchars((string) $c['Cliente']) ?></option>
+                        <?php
+                        $dupCli = $esDuplicar && $dup !== null ? trim((string) ($dup['Cliente'] ?? '')) : '';
+                        foreach ($clientes as $c): ?>
+                            <option value="<?= htmlspecialchars((string) $c['ID_Cliente']) ?>"<?= ($dupCli !== '' && (string) $c['ID_Cliente'] === $dupCli) ? ' selected' : '' ?>><?= htmlspecialchars((string) $c['Cliente']) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php if ($puedeCrearMaestros): ?>
@@ -261,45 +347,48 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                 <h2 class="md:col-span-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operación y logística</h2>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Fecha operación *</label>
-                    <input type="date" name="fecha_operacion" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <input type="date" name="fecha_operacion" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" value="<?= $esDuplicar ? htmlspecialchars($dupFechaOpYmd, ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Hora</label>
-                    <input type="time" name="hora" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <input type="time" name="hora" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" value="<?= $esDuplicar ? htmlspecialchars($dupHoraTime, ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Cantidad *</label>
-                    <input type="number" name="cantidad" step="0.01" min="0" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" placeholder="0">
+                    <input type="number" name="cantidad" step="0.01" min="0" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" placeholder="0" value="<?= ($esDuplicar && $dup !== null && ($dup['Cantidad'] ?? '') !== '') ? htmlspecialchars((string) $dup['Cantidad'], ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Lote</label>
-                    <input type="text" name="lote" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <input type="text" name="lote" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" value="<?= $esDuplicar && $dup !== null ? htmlspecialchars((string) ($dup['Lote'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Ciudad (municipio)</label>
                     <?php if ($municipios !== []): ?>
+                    <?php $dupCiudad = $esDuplicar && $dup !== null ? trim((string) ($dup['Ciudad'] ?? '')) : ''; ?>
                     <select name="ciudad" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Opcional —</option>
                         <?php foreach ($municipios as $mun): ?>
-                            <option value="<?= htmlspecialchars((string) $mun['c']) ?>"><?= htmlspecialchars((string) ($mun['Departamento'] ?? '') . ' — ' . ($mun['Municipio'] ?? '')) ?></option>
+                            <?php $mc = (string) ($mun['c'] ?? ''); ?>
+                            <option value="<?= htmlspecialchars($mc) ?>"<?= ($dupCiudad !== '' && $mc === $dupCiudad) ? ' selected' : '' ?>><?= htmlspecialchars((string) ($mun['Departamento'] ?? '') . ' — ' . ($mun['Municipio'] ?? '')) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php else: ?>
-                    <input type="number" name="ciudad" step="1" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" placeholder="Código municipio (c)">
+                    <input type="number" name="ciudad" step="1" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" placeholder="Código municipio (c)" value="<?= ($esDuplicar && $dup !== null && ($dup['Ciudad'] ?? '') !== '') ? htmlspecialchars((string) $dup['Ciudad'], ENT_QUOTES, 'UTF-8') : '' ?>">
                     <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Destino</label>
-                    <input type="text" name="destino" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <input type="text" name="destino" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" value="<?= $esDuplicar && $dup !== null ? htmlspecialchars((string) ($dup['Destino'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Ubicación</label>
-                    <input type="text" name="ubicacion" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <input type="text" name="ubicacion" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" value="<?= $esDuplicar && $dup !== null ? htmlspecialchars((string) ($dup['Ubicacion'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">OPL / vínculo</label>
                     <select name="opl" id="opl_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Opcional —</option>
+                        <?php $dupOpl = $esDuplicar && $dup !== null ? trim((string) ($dup['OPL'] ?? '')) : ''; ?>
                         <?php foreach ($opls as $o): ?>
                             <?php
                                 $idOpl = trim((string) ($o['ID_OPL'] ?? ''));
@@ -308,8 +397,10 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                                     continue;
                                 }
                                 $labelOpl = $nombreOpl !== '' ? $nombreOpl : $idOpl;
+                                $optVal = $idOpl !== '' ? $idOpl : $labelOpl;
+                                $selOpl = $dupOpl !== '' && ($dupOpl === $optVal || $dupOpl === $idOpl || $dupOpl === $labelOpl);
                             ?>
-                            <option value="<?= htmlspecialchars($idOpl !== '' ? $idOpl : $labelOpl) ?>">
+                            <option value="<?= htmlspecialchars($optVal) ?>"<?= $selOpl ? ' selected' : '' ?>>
                                 <?= htmlspecialchars($labelOpl) ?>
                             </option>
                         <?php endforeach; ?>
@@ -351,8 +442,9 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Conductor</label>
                     <select name="conductor" id="conductor_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">—</option>
+                        <?php $dupCond = $esDuplicar && $dup !== null ? trim((string) ($dup['Conductor'] ?? '')) : ''; ?>
                         <?php foreach ($conductores as $co): ?>
-                            <option value="<?= htmlspecialchars((string) $co['ID_Conductor']) ?>"><?= htmlspecialchars((string) $co['Conductor']) ?></option>
+                            <option value="<?= htmlspecialchars((string) $co['ID_Conductor']) ?>"<?= ($dupCond !== '' && (string) $co['ID_Conductor'] === $dupCond) ? ' selected' : '' ?>><?= htmlspecialchars((string) $co['Conductor']) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php if ($puedeCrearMaestros): ?>
@@ -369,8 +461,9 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Vehículo</label>
                     <select name="vehiculo" id="vehiculo_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">—</option>
+                        <?php $dupVeh = $esDuplicar && $dup !== null ? trim((string) ($dup['Vehiculo'] ?? '')) : ''; ?>
                         <?php foreach ($vehiculos as $v): ?>
-                            <option value="<?= htmlspecialchars((string) $v['ID_Vehiculo']) ?>"><?= htmlspecialchars((string) $v['Vehiculo']) ?></option>
+                            <option value="<?= htmlspecialchars((string) $v['ID_Vehiculo']) ?>"<?= ($dupVeh !== '' && (string) $v['ID_Vehiculo'] === $dupVeh) ? ' selected' : '' ?>><?= htmlspecialchars((string) $v['Vehiculo']) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php if ($puedeCrearMaestros): ?>
@@ -398,24 +491,29 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                                         continue;
                                     }
                                 ?>
-                                <option value="<?= htmlspecialchars($labelEstadoActividad) ?>" <?= strcasecmp($labelEstadoActividad, 'PROGRAMADO') === 0 ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($labelEstadoActividad) ?>
-                                </option>
+                                <option value="<?= htmlspecialchars($labelEstadoActividad) ?>" <?php
+                                    if ($esDuplicar && $dup !== null) {
+                                        echo strcasecmp($labelEstadoActividad, trim((string) ($dup['Estado_Actividad'] ?? ''))) === 0 ? 'selected' : '';
+                                    } else {
+                                        echo strcasecmp($labelEstadoActividad, 'PROGRAMADO') === 0 ? 'selected' : '';
+                                    }
+                                ?>><?= htmlspecialchars($labelEstadoActividad) ?></option>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <option value="PROGRAMADO" selected>PROGRAMADO</option>
-                            <option value="EJECUTADO">EJECUTADO</option>
-                            <option value="CANCELADO">CANCELADO</option>
+                            <?php $dupEstAct = $esDuplicar && $dup !== null ? mb_strtoupper(trim((string) ($dup['Estado_Actividad'] ?? '')), 'UTF-8') : ''; ?>
+                            <option value="PROGRAMADO"<?= (!$esDuplicar || $dupEstAct === '' || $dupEstAct === 'PROGRAMADO') ? ' selected' : '' ?>>PROGRAMADO</option>
+                            <option value="EJECUTADO"<?= ($esDuplicar && $dupEstAct === 'EJECUTADO') ? ' selected' : '' ?>>EJECUTADO</option>
+                            <option value="CANCELADO"<?= ($esDuplicar && $dupEstAct === 'CANCELADO') ? ' selected' : '' ?>>CANCELADO</option>
                         <?php endif; ?>
                     </select>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Teléfono</label>
-                    <input type="text" name="telefono" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <input type="text" name="telefono" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800" value="<?= $esDuplicar && $dup !== null ? htmlspecialchars((string) ($dup['Telefono'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?>">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Observaciones</label>
-                    <textarea name="observaciones" rows="3" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800"></textarea>
+                    <textarea name="observaciones" rows="3" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800"><?= $esDuplicar && $dup !== null ? htmlspecialchars((string) ($dup['Observaciones'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?></textarea>
                 </div>
             </section>
 
@@ -441,6 +539,10 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
             var avisoOpl = document.getElementById('opl_rel_aviso');
             var puedeCrearMaestros = <?= $puedeCrearMaestros ? 'true' : 'false' ?>;
             var selectConductor = document.getElementById('conductor_select');
+            var curProd = <?= json_encode($dupProd, JSON_UNESCAPED_UNICODE) ?>;
+            var curTc = <?= json_encode($dupTipoCuarteo, JSON_UNESCAPED_UNICODE) ?>;
+            var dupConductorPost = <?= json_encode($esDuplicar && $dup !== null ? trim((string) ($dup['Conductor'] ?? '')) : '', JSON_UNESCAPED_UNICODE) ?>;
+            var dupVehiculoPost = <?= json_encode($esDuplicar && $dup !== null ? trim((string) ($dup['Vehiculo'] ?? '')) : '', JSON_UNESCAPED_UNICODE) ?>;
             function repoblarSelect(select, items, idsPermitidos, labelVacio) {
                 if (!select) return;
                 var prev = select.value;
@@ -550,12 +652,23 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                 var k = planta.value;
                 var list = prodMap[k] || [];
                 prod.innerHTML = '';
+                var ok = false;
                 list.forEach(function (p) {
                     var o = document.createElement('option');
                     o.value = p;
                     o.textContent = p;
+                    if (curProd && p === curProd) {
+                        o.selected = true;
+                        ok = true;
+                    }
                     prod.appendChild(o);
                 });
+                if (!ok && list.length) {
+                    prod.selectedIndex = 0;
+                }
+                if (curProd && !ok) {
+                    curProd = '';
+                }
             }
             function refillCuarteo() {
                 var k = planta.value;
@@ -565,6 +678,9 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                     var o = document.createElement('option');
                     o.value = x;
                     o.textContent = x;
+                    if (curTc && x === curTc) {
+                        o.selected = true;
+                    }
                     tc.appendChild(o);
                 });
                 var productoActual = (prod.value || '').trim().toUpperCase();
@@ -574,7 +690,12 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
                 }
                 wrapC.style.display = mostrarCuarteo ? 'block' : 'none';
             }
-            planta.addEventListener('change', function () { refillProd(); refillCuarteo(); });
+            planta.addEventListener('change', function () {
+                curProd = '';
+                curTc = '';
+                refillProd();
+                refillCuarteo();
+            });
             prod.addEventListener('change', refillCuarteo);
             function limpiarOplNuevoExtras() {
                 var s1 = document.getElementById('opl_vinculo_conductor');
@@ -596,6 +717,12 @@ $vehiculosChoicesJson = json_encode(array_map(static function (array $v): array 
             refillCuarteo();
             if (selOpl) selOpl.addEventListener('change', refreshOplFiltros);
             refreshOplFiltros();
+            if (dupConductorPost && selectConductor) {
+                selectConductor.value = dupConductorPost;
+            }
+            if (dupVehiculoPost && selVeh) {
+                selVeh.value = dupVehiculoPost;
+            }
             var formProg = document.querySelector('form[action="procesar_programacion.php"]');
             if (formProg && puedeCrearMaestros) {
                 formProg.addEventListener('submit', function (ev) {
