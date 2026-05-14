@@ -312,6 +312,7 @@ function lm_usabilidad_etiqueta_modulo(string $modulo): string
     if (preg_match('/^gestion_tabla:([a-zA-Z0-9_]+)$/', $modulo, $m)) {
         $maestros = [
             'clientes' => 'Clientes',
+            'solicitante' => 'Solicitantes',
             'corte' => 'Cortes de canales',
             'zona' => 'Zonas',
             'departamento' => 'Departamentos',

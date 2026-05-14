@@ -12,6 +12,7 @@ $secciones_maestros = [
         'descripcion' => 'Catálogos de operación y transporte.',
         'items' => [
             ['id' => 'clientes', 'label' => 'Clientes', 'icon' => '👥'],
+            ['id' => 'solicitante', 'label' => 'Solicitantes', 'icon' => '📝'],
             ['id' => 'corte', 'label' => 'Cortes de Canales', 'icon' => '🥩'],
             ['id' => 'zona', 'label' => 'Zonas', 'icon' => '📍'],
             ['id' => 'departamento', 'label' => 'Departamentos', 'icon' => '🗺️'],

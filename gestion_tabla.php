@@ -10,7 +10,7 @@ $es_admin = lm_es_admin();
 $es_super_admin = lm_es_super_admin();
 $tabla_get = strtolower(trim((string) ($_GET['tabla'] ?? 'clientes')));
 $tablas_permitidas = [
-    'clientes', 'corte', 'departamento', 'municipio', 'opl', 'producto', 'tipo_de_cuarteo', 'zona', 'vehiculo', 'conductor',
+    'clientes', 'corte', 'departamento', 'municipio', 'opl', 'producto', 'tipo_de_cuarteo', 'zona', 'vehiculo', 'conductor', 'solicitante',
     'user', 'actividad', 'planta', 'logisticos',
     'empleado', 'empleado_descanso', 'empleado_programacion',
 ];
