@@ -241,7 +241,7 @@ if ($dupId > 0 && lm_es_admin()) {
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Solicitante</label>
-                    <select name="solicitante" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
+                    <select name="solicitante" id="solicitante_select" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">— Opcional —</option>
                         <?php
                         $dupSol = $esDuplicar && $dup !== null ? trim((string) ($dup['Solicitante'] ?? '')) : '';
@@ -249,6 +249,15 @@ if ($dupId > 0 && lm_es_admin()) {
                             <option value="<?= htmlspecialchars((string) $s['ID_Solicitante']) ?>"<?= ($dupSol !== '' && (string) $s['ID_Solicitante'] === $dupSol) ? ' selected' : '' ?>><?= htmlspecialchars((string) $s['Solicitante']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <?php if ($puedeCrearMaestros): ?>
+                    <button type="button" id="btn_nuevo_solicitante" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
+                        + Crear nuevo solicitante
+                    </button>
+                    <div id="wrap_nuevo_solicitante" class="mt-2 hidden">
+                        <input type="text" id="solicitante_nuevo_texto" name="solicitante_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Nombre del nuevo solicitante" autocomplete="off">
+                        <p class="mt-1 text-[10px] text-emerald-800 font-semibold leading-snug">Igual que en maestros: registro mínimo (ID automático + nombre). Si la tabla exige más columnas obligatorias, créelo en configuración.</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Medio de comunicación</label>
@@ -706,6 +715,7 @@ if ($dupId > 0 && lm_es_admin()) {
                 if (cb) cb.checked = false;
             }
             wireCrearNuevo('btn_nuevo_cliente', 'wrap_nuevo_cliente', 'cliente_nuevo_texto', document.getElementById('cliente_select'));
+            wireCrearNuevo('btn_nuevo_solicitante', 'wrap_nuevo_solicitante', 'solicitante_nuevo_texto', document.getElementById('solicitante_select'));
             wireCrearNuevo('btn_nuevo_opl', 'wrap_nuevo_opl', 'opl_nuevo_texto', selOpl, function (abrioDesdeOculto) {
                 if (!abrioDesdeOculto) {
                     limpiarOplNuevoExtras();

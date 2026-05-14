@@ -14,6 +14,7 @@ function programacion_alta_maestro_id_nombre(PDO $pdo, string $tabla, string $co
 {
     $tablasPerm = [
         'clientes' => ['id' => 'ID_Cliente', 'nom' => 'Cliente'],
+        'solicitante' => ['id' => 'ID_Solicitante', 'nom' => 'Solicitante'],
         'opl' => ['id' => 'ID_OPL', 'nom' => 'OPL'],
         'vehiculo' => ['id' => 'ID_Vehiculo', 'nom' => 'Vehiculo'],
         'conductor' => ['id' => 'ID_Conductor', 'nom' => 'Conductor'],
@@ -80,6 +81,7 @@ $hora = trim((string) ($_POST['hora'] ?? ''));
 $tipoCuarteo = trim((string) ($_POST['tipo_cuarteo'] ?? ''));
 $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
 $solicitante = trim((string) ($_POST['solicitante'] ?? ''));
+$solicitanteNuevo = trim((string) ($_POST['solicitante_nuevo'] ?? ''));
 $medioCom = trim((string) ($_POST['medio_comunicacion'] ?? ''));
 $estadoPedido = trim((string) ($_POST['estado_pedido'] ?? 'PROGRAMADO'));
 $lote = trim((string) ($_POST['lote'] ?? ''));
@@ -105,6 +107,12 @@ if ($clienteNuevo !== '' && lm_es_admin()) {
     $idC = programacion_alta_maestro_id_nombre($pdo, 'clientes', 'ID_Cliente', 'Cliente', $clienteNuevo);
     if ($idC !== null) {
         $cliente = $idC;
+    }
+}
+if ($solicitanteNuevo !== '' && lm_es_admin()) {
+    $idSol = programacion_alta_maestro_id_nombre($pdo, 'solicitante', 'ID_Solicitante', 'Solicitante', $solicitanteNuevo);
+    if ($idSol !== null) {
+        $solicitante = $idSol;
     }
 }
 if ($cliente === '') {
