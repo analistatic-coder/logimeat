@@ -109,7 +109,7 @@ if ($clienteNuevo !== '' && lm_es_admin()) {
         $cliente = $idC;
     }
 }
-if ($solicitanteNuevo !== '' && lm_es_admin()) {
+if ($solicitanteNuevo !== '') {
     $idSol = programacion_alta_maestro_id_nombre($pdo, 'solicitante', 'ID_Solicitante', 'Solicitante', $solicitanteNuevo);
     if ($idSol !== null) {
         $solicitante = $idSol;

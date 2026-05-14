@@ -249,15 +249,13 @@ if ($dupId > 0 && lm_es_admin()) {
                             <option value="<?= htmlspecialchars((string) $s['ID_Solicitante']) ?>"<?= ($dupSol !== '' && (string) $s['ID_Solicitante'] === $dupSol) ? ' selected' : '' ?>><?= htmlspecialchars((string) $s['Solicitante']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if ($puedeCrearMaestros): ?>
                     <button type="button" id="btn_nuevo_solicitante" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
                         + Crear nuevo solicitante
                     </button>
                     <div id="wrap_nuevo_solicitante" class="mt-2 hidden">
                         <input type="text" id="solicitante_nuevo_texto" name="solicitante_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Nombre del nuevo solicitante" autocomplete="off">
-                        <p class="mt-1 text-[10px] text-emerald-800 font-semibold leading-snug">Igual que en maestros: registro mínimo (ID automático + nombre). Si la tabla exige más columnas obligatorias, créelo en configuración.</p>
+                        <p class="mt-1 text-[10px] text-emerald-800 font-semibold leading-snug">Igual que en <strong>Configuración › maestros</strong>: solo nombre e ID automático. Si la tabla exige más columnas obligatorias, créelo en configuración.</p>
                     </div>
-                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Medio de comunicación</label>
