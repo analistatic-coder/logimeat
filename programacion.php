@@ -443,7 +443,7 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
         }
         .compact-table thead th.sticky-r {
             position: sticky; right: 0; top: 0; z-index: 35;
-            width: 2.75rem; min-width: 2.75rem;
+            width: auto; min-width: 5.25rem; max-width: 6rem;
             background: #f1f5f9; box-shadow: -1px 0 0 #e2e8f0, 0 1px 0 #e2e8f0;
         }
         .compact-table tbody td.sticky-l1 {
@@ -460,9 +460,10 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
         }
         .compact-table tbody td.sticky-r {
             position: sticky; right: 0; z-index: 20;
-            width: 2.75rem; min-width: 2.75rem;
+            width: auto; min-width: 5.25rem; max-width: 6rem;
             background: #fff;
             box-shadow: -1px 0 0 #f1f5f9;
+            vertical-align: middle;
         }
         .compact-table tbody tr:nth-child(even) td { background: #f8fafc; }
         .compact-table tbody tr:nth-child(odd) td { background: #fff; }
@@ -730,11 +731,13 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
                                         <span class="status-pill <?= $class ?>"><?= htmlspecialchars($st ?: '—') ?></span>
                                 </td>
                                     <td class="text-slate-600 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Telefono'] ?? '')) ?></td>
-                                    <td class="text-center sticky-r whitespace-nowrap">
+                                    <td class="text-center sticky-r whitespace-nowrap px-1 py-1.5 align-top">
+                                        <div class="flex flex-col items-stretch gap-1">
                                         <?php if ($puedeSeleccionColumnas): ?>
-                                        <a href="nueva_programacion.php?duplicar_de=<?= (int) ($r['id_interno'] ?? 0) ?>" class="inline-flex items-center justify-center w-7 h-7 rounded-md text-emerald-600 text-xs font-black hover:bg-emerald-50 mr-0.5" title="Duplicar como nueva programación">⎘</a>
+                                        <a href="nueva_programacion.php?duplicar_de=<?= (int) ($r['id_interno'] ?? 0) ?>" class="rounded-md border border-emerald-100 bg-emerald-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-emerald-800 hover:bg-emerald-100" title="Duplicar como nueva programación">Duplicar</a>
                                         <?php endif; ?>
-                                        <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="inline-flex items-center justify-center w-7 h-7 rounded-md text-blue-600 text-sm font-black hover:bg-blue-50" title="Editar">›</a>
+                                        <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="rounded-md border border-blue-100 bg-blue-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-blue-800 hover:bg-blue-100" title="Editar programación">Editar</a>
+                                        </div>
                                 </td>
                             </tr>
                             <?php endforeach; endif; ?>
