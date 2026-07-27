@@ -142,18 +142,96 @@ function programacion_es_producto_valido(string $plantaKey, string $producto): b
 }
 
 /**
- * Tipo de cuarteo (principalmente Beneficio). Desposte/Celfrio suelen ir vacíos.
+ * Nombres de tipo de cuarteo en el maestro `tipo_de_cuarteo` (módulo Administración).
+ *
+ * @return list<string>
+ */
+function programacion_tipos_cuarteo_desde_bd(?PDO $pdo): array
+{
+    if (!$pdo instanceof PDO) {
+        return [];
+    }
+    try {
+        $rows = $pdo->query(
+            'SELECT Tipo_Cuarteo FROM tipo_de_cuarteo
+             WHERE Tipo_Cuarteo IS NOT NULL AND TRIM(Tipo_Cuarteo) <> \'\'
+             ORDER BY Tipo_Cuarteo ASC'
+        )->fetchAll(PDO::FETCH_COLUMN);
+        if (!is_array($rows)) {
+            return [];
+        }
+        $out = [];
+        $seen = [];
+        foreach ($rows as $v) {
+            $t = trim((string) $v);
+            if ($t === '') {
+                continue;
+            }
+            $k = mb_strtoupper($t, 'UTF-8');
+            if (isset($seen[$k])) {
+                continue;
+            }
+            $seen[$k] = true;
+            $out[] = $t;
+        }
+
+        return $out;
+    } catch (Throwable) {
+        return [];
+    }
+}
+
+/**
+ * Tipo de cuarteo por planta. Base operativa (Beneficio) + tipos del maestro Administración.
+ * Desposte/Celfrio/Subproductos: vacíos salvo que existan en BD (se exponen en Beneficio).
  *
  * @return array<string, list<string>>
  */
-function programacion_tipos_cuarteo_por_planta(): array
+function programacion_tipos_cuarteo_por_planta(?PDO $pdo = null): array
 {
-    return [
+    $base = [
         'BENEFICIO' => ['REGIONAL', 'PISTOLA'],
         'DESPOSTE' => [],
         'SUBPRODUCTOS' => [],
         'CELFRIO' => [],
     ];
+    $fromDb = programacion_tipos_cuarteo_desde_bd($pdo);
+    if ($fromDb === []) {
+        return $base;
+    }
+    $merged = $base['BENEFICIO'];
+    $seen = [];
+    foreach ($merged as $x) {
+        $seen[mb_strtoupper($x, 'UTF-8')] = true;
+    }
+    foreach ($fromDb as $t) {
+        $k = mb_strtoupper($t, 'UTF-8');
+        if (isset($seen[$k])) {
+            continue;
+        }
+        $seen[$k] = true;
+        $merged[] = $t;
+    }
+    $base['BENEFICIO'] = $merged;
+
+    return $base;
+}
+
+/** True si el tipo está permitido para la planta (lista fija + maestro BD). */
+function programacion_es_tipo_cuarteo_valido(string $plantaKey, string $tipo, ?PDO $pdo = null): bool
+{
+    $tipo = trim($tipo);
+    if ($tipo === '') {
+        return true;
+    }
+    $list = programacion_tipos_cuarteo_por_planta($pdo)[$plantaKey] ?? [];
+    foreach ($list as $x) {
+        if (strcasecmp(trim((string) $x), $tipo) === 0) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /** Timestamp UNIX de Fecha_de_Operacion d/m/Y o null si no parsea. */

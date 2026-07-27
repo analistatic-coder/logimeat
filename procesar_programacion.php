@@ -18,6 +18,7 @@ function programacion_alta_maestro_id_nombre(PDO $pdo, string $tabla, string $co
         'opl' => ['id' => 'ID_OPL', 'nom' => 'OPL'],
         'vehiculo' => ['id' => 'ID_Vehiculo', 'nom' => 'Vehiculo'],
         'conductor' => ['id' => 'ID_Conductor', 'nom' => 'Conductor'],
+        'tipo_de_cuarteo' => ['id' => 'ID_Tipo_Cuarteo', 'nom' => 'Tipo_Cuarteo'],
     ];
     if (!isset($tablasPerm[$tabla]) || $tablasPerm[$tabla]['id'] !== $colId || $tablasPerm[$tabla]['nom'] !== $colNombre) {
         return null;
@@ -79,6 +80,7 @@ $cantidad = $_POST['cantidad'] ?? '';
 $fechaOp = trim((string) ($_POST['fecha_operacion'] ?? ''));
 $hora = trim((string) ($_POST['hora'] ?? ''));
 $tipoCuarteo = trim((string) ($_POST['tipo_cuarteo'] ?? ''));
+$tipoCuarteoNuevo = trim((string) ($_POST['tipo_cuarteo_nuevo'] ?? ''));
 $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
 $solicitante = trim((string) ($_POST['solicitante'] ?? ''));
 $solicitanteNuevo = trim((string) ($_POST['solicitante_nuevo'] ?? ''));
@@ -138,16 +140,24 @@ if (!programacion_es_producto_valido($plantaOp, $producto)) {
     die('El producto no corresponde a la planta seleccionada.');
 }
 
-$tcList = programacion_tipos_cuarteo_por_planta()[$plantaOp] ?? [];
 $requiereCuarteo = mb_strtoupper($producto, 'UTF-8') === 'CANALES';
 if (!$requiereCuarteo) {
     $tipoCuarteo = '';
-}
-if ($tipoCuarteo !== '' && $tcList !== [] && !in_array($tipoCuarteo, $tcList, true)) {
-    die('Tipo de cuarteo no válido para esta planta.');
+    $tipoCuarteoNuevo = '';
 }
 
-if ($tcList === [] || !$requiereCuarteo) {
+if ($tipoCuarteoNuevo !== '' && lm_es_admin() && $requiereCuarteo) {
+    $idTc = programacion_alta_maestro_id_nombre($pdo, 'tipo_de_cuarteo', 'ID_Tipo_Cuarteo', 'Tipo_Cuarteo', $tipoCuarteoNuevo);
+    if ($idTc !== null) {
+        $tipoCuarteo = $tipoCuarteoNuevo;
+    }
+}
+
+if ($tipoCuarteo !== '' && $requiereCuarteo && !programacion_es_tipo_cuarteo_valido($plantaOp, $tipoCuarteo, $pdo)) {
+    die('Tipo de cuarteo no válido para esta planta. Créelo aquí o en Configuración › Tipo de Cuarteo.');
+}
+
+if (!$requiereCuarteo) {
     $tipoCuarteo = '';
 }
 

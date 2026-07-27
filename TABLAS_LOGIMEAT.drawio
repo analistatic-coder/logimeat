@@ -1,0 +1,382 @@
+<mxfile host="app.diagrams.net" modified="2026-07-27T16:00:00.000Z" agent="LogiMeat-ERD" version="22.1.0" type="device">
+  <diagram id="tablas-relaciones-logimeat" name="LogiMeat — Tablas y Relaciones">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="4200" pageHeight="3200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TÍTULO -->
+        <mxCell id="title" value="LogiMeat — Modelo de datos (tablas + relaciones)&#xa;Nota: la mayoría de FKs hacia Programacion son lógicas/blandas (VARCHAR con ID o nombre), no FOREIGN KEY físicas en MySQL." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="4000" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- LEYENDA -->
+        <mxCell id="leg" value="Leyenda: 🔑 PK · ——► FK lógica (blanda) · ═► FK / vínculo fuerte en código · - - -► vista / backup / catálogo auxiliar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;fontSize=12;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="900" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== PROGRAMACION (CENTRO) ===================== -->
+        <mxCell id="t-prog" value="programacion" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#0ea5e9;fontColor=#ffffff;strokeColor=#0369a1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="900" width="280" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-pk" value="🔑 id_interno : INT (PK)" style="text;strokeColor=none;fillColor=#e0f2fe;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;" vertex="1" parent="t-prog">
+          <mxGeometry y="30" width="280" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-1" value="ID_Programacion (UK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="56" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-2" value="Fecha_de_Registro" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="78" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-3" value="🔗 Solicitante → solicitante" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="100" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-4" value="🔗 Medio_de_Comunicacion" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="122" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-5" value="🔗 Estado → estado" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="144" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-6" value="🔗 Cliente → clientes" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="166" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-7" value="🔗 Planta → planta" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="188" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-8" value="Planta_Operativa (BENEFICIO…)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="210" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-9" value="🔗 Actividad → actividad" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="232" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-10" value="Fecha_de_Operacion · Hora" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="254" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-11" value="🔗 Producto → producto" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="276" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-12" value="🔗 Tipo_de_Cuarteo" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="298" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-13" value="Lote · Cantidad · Ciudad" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="320" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-14" value="Destino · Ubicacion · Telefono" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="342" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-15" value="🔗 OPL → opl" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="364" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-16" value="🔗 Conductor → conductor" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="386" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-17" value="🔗 Vehiculo → vehiculo" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="408" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-18" value="Observaciones (TEXT)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="430" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-19" value="OTIF: Cantidad_Correcta…" style="text;strokeColor=none;fillColor=#ecfdf5;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="452" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-20" value="Pedido_Perfecto" style="text;strokeColor=none;fillColor=#ecfdf5;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="474" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-21" value="🔗 Estado_Actividad" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="496" width="280" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prog-22" value="🔗 Ciudad → municipio (lógica)" style="text;strokeColor=none;fillColor=#fef9c3;align=left;verticalAlign=middle;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="t-prog">
+          <mxGeometry y="518" width="280" height="22" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== MAESTROS IZQUIERDA ===================== -->
+        <mxCell id="t-cli" value="clientes" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="700" width="220" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="t-cli-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-cli"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-cli-1" value="ID_Cliente (UK)" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-cli"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-cli-2" value="Cliente" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-cli"><mxGeometry y="68" width="220" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-cli-3" value="Direccion · Telefono · Email" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-cli"><mxGeometry y="88" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-sol" value="solicitante" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t-sol-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-sol"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-sol-1" value="ID_Solicitante · Solicitante" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-sol"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-sol-2" value="Telefono · Email" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-sol"><mxGeometry y="68" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-med" value="medio_de_comunicacion" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="320" width="220" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="t-med-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-med"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-med-1" value="ID_Medio_Comunicacion" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-med"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-med-2" value="Medio_de_Comunicacion" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-med"><mxGeometry y="68" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-est" value="estado" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="160" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-est-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-est"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-est-1" value="ID_Estado · Estado" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-est"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-eact" value="estado_actividad" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="160" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-eact-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-eact"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-eact-1" value="ID_Actividad · Estado_Actividad" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-eact"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-act" value="actividad" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="320" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-act-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-act"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-act-1" value="ID_Actividad · Actividad" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-act"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-pla" value="planta" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="480" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-pla-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-pla"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-pla-1" value="ID_Planta · Planta" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-pla"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-prod" value="producto" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="640" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-prod-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-prod"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-prod-1" value="ID_Producto · Producto" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-prod"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-tc" value="tipo_de_cuarteo" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="800" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-tc-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-tc"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-tc-1" value="ID_Tipo_Cuarteo · Tipo_Cuarteo" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-tc"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-corte" value="corte" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#7c3aed;fontColor=#fff;strokeColor=#5b21b6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="980" width="240" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="t-corte-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#ede9fe;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-corte"><mxGeometry y="26" width="240" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-corte-1" value="ID_Corte" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-corte"><mxGeometry y="48" width="240" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-corte-2" value="🔗 ID_Planta → planta" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-corte"><mxGeometry y="68" width="240" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-corte-3" value="🔗 ID_Tipo_Cuarteo → tipo_de_cuarteo" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-corte"><mxGeometry y="88" width="240" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-corte-4" value="Corte" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-corte"><mxGeometry y="108" width="240" height="20" as="geometry" /></mxCell>
+
+        <!-- LOGÍSTICA -->
+        <mxCell id="t-opl" value="opl" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="980" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-opl-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-opl"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-opl-1" value="ID_OPL · OPL" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-opl"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-cond" value="conductor" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1140" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t-cond-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-cond"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-cond-1" value="ID_Conductor · Conductor" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-cond"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-cond-2" value="Identificacion · Celular · Email" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-cond"><mxGeometry y="68" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-veh" value="vehiculo" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1340" width="220" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="t-veh-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-veh"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-veh-1" value="ID_Vehiculo · Vehiculo · Remolque" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-veh"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-log" value="logisticos" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ea580c;fontColor=#fff;strokeColor=#c2410c;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1200" width="260" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="t-log-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#ffedd5;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-log"><mxGeometry y="26" width="260" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-log-1" value="ID_Logistico" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-log"><mxGeometry y="48" width="260" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-log-2" value="Identificacion · Nombre · Cargo" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-log"><mxGeometry y="68" width="260" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-log-3" value="Fecha_de_Ingreso · Telefono" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-log"><mxGeometry y="88" width="260" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-log-4" value="(código: puente OPL+Conductor+Vehículo&#xa;si columnas compatibles existen)" style="text;strokeColor=none;fillColor=#fff7ed;align=left;spacingLeft=4;fontSize=9;" vertex="1" parent="t-log"><mxGeometry y="108" width="260" height="40" as="geometry" /></mxCell>
+
+        <!-- GEO -->
+        <mxCell id="t-dep" value="departamento" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#0f766e;fontColor=#fff;strokeColor=#115e59;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="700" y="160" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t-dep-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#ccfbf1;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-dep"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-dep-1" value="ID_Departamento · Departamento" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-dep"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-mun" value="municipio" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#0f766e;fontColor=#fff;strokeColor=#115e59;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="700" y="320" width="240" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t-mun-pk" value="🔑 PK (código municipio)" style="text;strokeColor=none;fillColor=#ccfbf1;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-mun"><mxGeometry y="26" width="240" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-mun-1" value="🔗 ID_Departamento → departamento" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-mun"><mxGeometry y="48" width="240" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-mun-2" value="Municipio · Departamento" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-mun"><mxGeometry y="68" width="240" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-niv" value="nivel" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#334155;fontColor=#fff;strokeColor=#0f172a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="700" y="500" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="t-niv-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-niv"><mxGeometry y="26" width="220" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-niv-1" value="ID_Nivel · Nivel" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-niv"><mxGeometry y="48" width="220" height="20" as="geometry" /></mxCell>
+
+        <!-- ===================== PERSONAL DERECHA ===================== -->
+        <mxCell id="t-emp" value="empleado" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#be123c;fontColor=#fff;strokeColor=#9f1239;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="500" width="280" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="t-emp-pk" value="🔑 id_interno INT (PK técnica)" style="text;strokeColor=none;fillColor=#ffe4e6;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-emp"><mxGeometry y="28" width="280" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-emp-1" value="ID_Empleado (negocio / cédula)" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-emp"><mxGeometry y="50" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-emp-2" value="Tipo_Documento · Numero_Documento" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-emp"><mxGeometry y="70" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-emp-3" value="Nombre_Completo · Cargo · Area" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-emp"><mxGeometry y="90" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-emp-4" value="Telefono · Email · Fecha_Ingreso" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-emp"><mxGeometry y="110" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-emp-5" value="Activo · Observaciones · Puesto_Trabajo" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-emp"><mxGeometry y="130" width="280" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-edesc" value="empleado_descanso" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e11d48;fontColor=#fff;strokeColor=#be123c;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2580" y="400" width="280" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="t-edesc-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#ffe4e6;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-edesc"><mxGeometry y="26" width="280" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-edesc-1" value="ID_Descanso (UK)" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-edesc"><mxGeometry y="48" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-edesc-2" value="🔗 ID_Empleado → empleado" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-edesc"><mxGeometry y="68" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-edesc-3" value="Tipo · Fecha_Inicio · Fecha_Fin" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-edesc"><mxGeometry y="88" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-edesc-4" value="Observaciones · Anio · Numero_Semana" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-edesc"><mxGeometry y="108" width="280" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-eprog" value="empleado_programacion" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e11d48;fontColor=#fff;strokeColor=#be123c;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2580" y="680" width="300" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="t-eprog-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#ffe4e6;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-eprog"><mxGeometry y="26" width="300" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-eprog-1" value="ID_Programacion (turno personal UK)" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-eprog"><mxGeometry y="48" width="300" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-eprog-2" value="🔗 ID_Empleado → empleado" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-eprog"><mxGeometry y="68" width="300" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-eprog-3" value="Dia_Semana · Hora_Entrada · Hora_Salida" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-eprog"><mxGeometry y="88" width="300" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-eprog-4" value="Turno · Actividad · Planta · Producto" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-eprog"><mxGeometry y="108" width="300" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-eprog-5" value="Observaciones · Anio · Numero_Semana" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-eprog"><mxGeometry y="128" width="300" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-eprog-6" value="(≠ programacion logística; módulo personal)" style="text;strokeColor=none;fillColor=#fff1f2;align=left;spacingLeft=4;fontSize=9;" vertex="1" parent="t-eprog"><mxGeometry y="148" width="300" height="30" as="geometry" /></mxCell>
+
+        <mxCell id="t-pae" value="programacion_actividad_extra" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#64748b;fontColor=#fff;strokeColor=#475569;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2580" y="1000" width="280" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="t-pae-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#e2e8f0;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-pae"><mxGeometry y="26" width="280" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-pae-1" value="Nombre (UK) — catálogo actividades" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-pae"><mxGeometry y="48" width="280" height="20" as="geometry" /></mxCell>
+
+        <!-- SEGURIDAD -->
+        <mxCell id="t-user" value="user" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#1d4ed8;fontColor=#fff;strokeColor=#1e3a8a;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="160" width="260" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="t-user-pk" value="🔑 id_interno INT (PK)" style="text;strokeColor=none;fillColor=#dbeafe;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-user"><mxGeometry y="26" width="260" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-user-1" value="ID_User (negocio)" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-user"><mxGeometry y="48" width="260" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-user-2" value="Email · Nombre · Clave · Rol" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-user"><mxGeometry y="68" width="260" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-user-3" value="Estado · Acciones" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-user"><mxGeometry y="88" width="260" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-pr" value="password_reset" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#2563eb;fontColor=#fff;strokeColor=#1d4ed8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2540" y="140" width="260" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="t-pr-pk" value="🔑 id INT (PK)" style="text;strokeColor=none;fillColor=#dbeafe;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-pr"><mxGeometry y="26" width="260" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-pr-1" value="🔗 user_id → user.ID_User" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-pr"><mxGeometry y="48" width="260" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-pr-2" value="token · expires_at · used" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-pr"><mxGeometry y="68" width="260" height="20" as="geometry" /></mxCell>
+
+        <mxCell id="t-usa" value="app_usabilidad_evento" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#2563eb;fontColor=#fff;strokeColor=#1d4ed8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2880" y="140" width="280" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="t-usa-pk" value="🔑 id BIGINT (PK)" style="text;strokeColor=none;fillColor=#dbeafe;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-usa"><mxGeometry y="26" width="280" height="22" as="geometry" /></mxCell>
+        <mxCell id="t-usa-1" value="tipo ENUM · modulo" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-usa"><mxGeometry y="48" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-usa-2" value="🔗 id_user → user.ID_User" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;fontStyle=1;" vertex="1" parent="t-usa"><mxGeometry y="68" width="280" height="20" as="geometry" /></mxCell>
+        <mxCell id="t-usa-3" value="rol · ip · user_agent · creado_en" style="text;strokeColor=none;fillColor=none;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-usa"><mxGeometry y="88" width="280" height="20" as="geometry" /></mxCell>
+
+        <!-- VISTA Y BACKUP -->
+        <mxCell id="t-vista" value="vista_programacion_completa&#xa;(VIEW)" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ca8a04;fontColor=#fff;strokeColor=#a16207;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="1600" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="t-vista-1" value="Vista sobre programacion (+ joins)" style="text;strokeColor=none;fillColor=#fef9c3;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-vista"><mxGeometry y="40" width="280" height="30" as="geometry" /></mxCell>
+
+        <mxCell id="t-bak" value="programacion_backup_…" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#78716c;fontColor=#fff;strokeColor=#57534e;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="1600" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="t-bak-1" value="Copia histórica de programacion&#xa;(misma estructura, sin FK activa)" style="text;strokeColor=none;fillColor=#f5f5f4;align=left;spacingLeft=4;fontSize=10;" vertex="1" parent="t-bak"><mxGeometry y="26" width="260" height="40" as="geometry" /></mxCell>
+
+        <!-- ===================== RELACIONES ===================== -->
+        <!-- Maestros → Programacion -->
+        <mxCell id="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-cli" target="t-prog" value="Cliente">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-sol" target="t-prog" value="Solicitante">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-med" target="t-prog" value="Medio">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-est" target="t-prog" value="Estado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-eact" target="t-prog" value="Estado_Actividad">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-act" target="t-prog" value="Actividad">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-pla" target="t-prog" value="Planta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-prod" target="t-prog" value="Producto">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-tc" target="t-prog" value="Tipo_de_Cuarteo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-opl" target="t-prog" value="OPL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-cond" target="t-prog" value="Conductor">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0284c7;strokeWidth=2;fontSize=10;fontColor=#0284c7;" edge="1" parent="1" source="t-veh" target="t-prog" value="Vehiculo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0f766e;strokeWidth=2;dashed=1;fontSize=10;fontColor=#0f766e;" edge="1" parent="1" source="t-mun" target="t-prog" value="Ciudad≈Municipio">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- corte -->
+        <mxCell id="r14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#7c3aed;strokeWidth=2;fontSize=10;fontColor=#7c3aed;" edge="1" parent="1" source="t-pla" target="t-corte" value="ID_Planta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#7c3aed;strokeWidth=2;fontSize=10;fontColor=#7c3aed;" edge="1" parent="1" source="t-tc" target="t-corte" value="ID_Tipo_Cuarteo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- geo -->
+        <mxCell id="r16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#0f766e;strokeWidth=3;fontSize=10;fontColor=#0f766e;" edge="1" parent="1" source="t-dep" target="t-mun" value="ID_Departamento">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- logisticos puente -->
+        <mxCell id="r17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#ea580c;strokeWidth=2;dashed=1;fontSize=9;fontColor=#ea580c;" edge="1" parent="1" source="t-opl" target="t-log" value="OPL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#ea580c;strokeWidth=2;dashed=1;fontSize=9;fontColor=#ea580c;" edge="1" parent="1" source="t-cond" target="t-log" value="Conductor">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#ea580c;strokeWidth=2;dashed=1;fontSize=9;fontColor=#ea580c;" edge="1" parent="1" source="t-veh" target="t-log" value="Vehiculo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- personal -->
+        <mxCell id="r20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#be123c;strokeWidth=3;fontSize=11;fontColor=#be123c;" edge="1" parent="1" source="t-emp" target="t-edesc" value="ID_Empleado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#be123c;strokeWidth=3;fontSize=11;fontColor=#be123c;" edge="1" parent="1" source="t-emp" target="t-eprog" value="ID_Empleado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=9;fontColor=#64748b;" edge="1" parent="1" source="t-pae" target="t-eprog" value="Nombre≈Actividad">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- seguridad -->
+        <mxCell id="r23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#1d4ed8;strokeWidth=3;fontSize=10;fontColor=#1d4ed8;" edge="1" parent="1" source="t-user" target="t-pr" value="user_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;startArrow=ERone;strokeColor=#1d4ed8;strokeWidth=3;fontSize=10;fontColor=#1d4ed8;" edge="1" parent="1" source="t-user" target="t-usa" value="id_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- vista / backup -->
+        <mxCell id="r25" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dashed=1;strokeColor=#ca8a04;strokeWidth=2;fontSize=10;fontColor=#ca8a04;" edge="1" parent="1" source="t-prog" target="t-vista" value="basada en">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r26" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dashed=1;strokeColor=#78716c;strokeWidth=2;fontSize=10;fontColor=#78716c;" edge="1" parent="1" source="t-prog" target="t-bak" value="snapshot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Nota resumen -->
+        <mxCell id="nota" value="RELACIONES CLAVE&#xa;&#xa;1) programacion es el hub operativo: recibe maestros por FK blanda (ID o nombre en VARCHAR).&#xa;2) empleado 1—N empleado_descanso / empleado_programacion (ID_Empleado).&#xa;3) departamento 1—N municipio.&#xa;4) planta + tipo_de_cuarteo → corte.&#xa;5) user 1—N password_reset y app_usabilidad_evento.&#xa;6) logisticos: en BD aparece como personal logístico; en código puede usarse como puente OPL+conductor+vehículo.&#xa;7) empleado_programacion NO es FK a programacion logística (son módulos distintos)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;align=left;spacingLeft=12;spacingTop=8;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1700" width="700" height="200" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

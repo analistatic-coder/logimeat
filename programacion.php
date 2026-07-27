@@ -7,6 +7,31 @@ require_once __DIR__ . '/config/programacion_catalogos.php';
 
 $puedeSeleccionColumnas = lm_es_admin();
 
+$msjFlash = isset($_GET['msj']) ? trim((string) $_GET['msj']) : '';
+$flashOk = '';
+$flashErr = '';
+switch ($msjFlash) {
+    case 'eliminado':
+        $flashOk = 'Programación eliminada correctamente.';
+        break;
+    case 'editado':
+        $flashOk = 'Programación actualizada.';
+        break;
+    case 'csrf':
+        $flashErr = 'Sesión de seguridad caducada. Intente de nuevo.';
+        break;
+    case 'no_autorizado':
+        $flashErr = 'No tiene permiso para eliminar.';
+        break;
+    case 'eliminar_no_existe':
+    case 'eliminar_invalido':
+        $flashErr = 'No se encontró la programación a eliminar.';
+        break;
+    case 'eliminar_error':
+        $flashErr = 'No se pudo eliminar la programación.';
+        break;
+}
+
 $desde = isset($_GET['desde']) ? trim((string) $_GET['desde']) : '';
 $hasta = isset($_GET['hasta']) ? trim((string) $_GET['hasta']) : '';
 $buscar = isset($_GET['buscar']) ? trim((string) $_GET['buscar']) : '';
@@ -164,8 +189,12 @@ $sqlJoins = '
              = CAST(mdc.ID_Medio_Comunicacion AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
         LEFT JOIN municipio mun ON p.Ciudad = mun.c
         LEFT JOIN tipo_de_cuarteo tc
-            ON CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
-             = CAST(tc.ID_Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+            ON (
+                CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+                 = CAST(tc.ID_Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+                OR UPPER(TRIM(CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+                 = UPPER(TRIM(CAST(tc.Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+            )
         LEFT JOIN opl oplm ON (
             p.OPL = oplm.ID_OPL
             OR CAST(p.OPL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
@@ -519,6 +548,17 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
                 </div>
             </div>
 
+            <?php if ($flashOk !== ''): ?>
+            <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-[11px] text-emerald-900 font-semibold">
+                <?= htmlspecialchars($flashOk, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <?php endif; ?>
+            <?php if ($flashErr !== ''): ?>
+            <div class="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-[11px] text-rose-900 font-semibold">
+                <?= htmlspecialchars($flashErr, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <?php endif; ?>
+
             <?php if ($aviso_limite_default): ?>
             <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-[11px] text-amber-900 font-semibold">
                 Hay más registros en la base de datos. Por rendimiento solo se cargan los <strong>2000</strong> más recientes.
@@ -737,6 +777,13 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
                                         <a href="nueva_programacion.php?duplicar_de=<?= (int) ($r['id_interno'] ?? 0) ?>" class="rounded-md border border-emerald-100 bg-emerald-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-emerald-800 hover:bg-emerald-100" title="Duplicar como nueva programación">Duplicar</a>
                                         <?php endif; ?>
                                         <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="rounded-md border border-blue-100 bg-blue-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-blue-800 hover:bg-blue-100" title="Editar programación">Editar</a>
+                                        <?php if ($puedeSeleccionColumnas): ?>
+                                        <form method="post" action="eliminar_programacion.php" class="m-0" onsubmit="return confirm('¿Eliminar esta programación de forma permanente? Esta acción no se puede deshacer.');">
+                                            <?= lm_csrf_field() ?>
+                                            <input type="hidden" name="id_interno" value="<?= (int) ($r['id_interno'] ?? 0) ?>">
+                                            <button type="submit" class="w-full rounded-md border border-rose-100 bg-rose-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-rose-800 hover:bg-rose-100" title="Eliminar programación">Eliminar</button>
+                                        </form>
+                                        <?php endif; ?>
                                         </div>
                                 </td>
                             </tr>

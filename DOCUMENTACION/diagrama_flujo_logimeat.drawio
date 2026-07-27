@@ -1,0 +1,465 @@
+<mxfile host="app.diagrams.net" modified="2026-07-22T20:00:00.000Z" agent="LogiMeat-Docs" version="22.1.0" type="device">
+  <diagram id="flujo-logimeat" name="Flujo completo LogiMeat">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="2800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===== TÍTULO ===== -->
+        <mxCell id="title" value="LogiMeat v3 — Diagrama de flujo del software&#xa;Colbeef SAS · Planificación logística cárnica · PHP 8 + MySQL + Tailwind" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="2120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LEYENDA ===== -->
+        <mxCell id="leg-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="700" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="leg-t" value="Leyenda" style="text;html=1;fontStyle=1;fontSize=12;align=left;" vertex="1" parent="1">
+          <mxGeometry x="50" y="95" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="Inicio / Fin" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="50" y="120" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Proceso PHP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="150" y="120" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="Decisión" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="250" y="115" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="Base de datos" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;fontSize=10;size=8;" vertex="1" parent="1">
+          <mxGeometry x="345" y="115" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="Módulo UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="450" y="120" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" value="Admin / Super" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="555" y="120" width="100" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 1. ENTRADA / AUTH ===== -->
+        <mxCell id="s1" value="1. ACCESO Y AUTENTICACIÓN" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="190" width="2120" height="320" as="geometry" />
+        </mxCell>
+
+        <mxCell id="start" value="Usuario&#xa;intranet" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontStyle=1;" vertex="1" parent="s1">
+          <mxGeometry x="40" y="50" width="100" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="workbeef" value="WORKBEEF&#xa;192.168.20.205:8000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="40" y="140" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="login" value="login.php&#xa;Formulario usuario + clave" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontStyle=1;" vertex="1" parent="s1">
+          <mxGeometry x="200" y="50" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="valida" value="¿Credenciales&#xa;válidas en User?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry x="410" y="35" width="140" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-user" value="MySQL&#xa;tabla User" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=10;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry x="430" y="160" width="100" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="map-rol" value="Mapeo de rol&#xa;ANALISTA TIC → Super Admin&#xa;ADMIN → Administrador&#xa;AUXILIAR/OPERATIVO → Operativo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="600" y="40" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sesion" value="Sesión PHP&#xa;user_id, nombre, rol&#xa;ultima_actividad&#xa;Timeout 15 min (auth.php)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="860" y="45" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="usab-login" value="usabilidad_log&#xa;registrar login" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="860" y="150" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="reset" value="password_reset_request&#xa;→ token + SMTP&#xa;→ password_reset_confirm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce7f3;strokeColor=#db2777;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="200" y="160" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="auth-gate" value="auth.php (gate)&#xa;¿Sesión viva?&#xa;¿Timeout &lt; 900s?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry x="1100" y="40" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dashboard" value="index.php&#xa;DASHBOARD&#xa;KPIs + Chart.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontStyle=1;fontSize=12;" vertex="1" parent="s1">
+          <mxGeometry x="1340" y="50" width="160" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sidebar" value="mostrarSidebar()&#xa;Menú según rol" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="1560" y="50" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="deny" value="Acceso denegado&#xa;/ sesión expirada" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;fontSize=10;" vertex="1" parent="s1">
+          <mxGeometry x="1100" y="180" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- edges auth -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s1" source="start" target="login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s1" source="login" target="valida">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;fontSize=10;" edge="1" parent="s1" source="valida" target="map-rol" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;dashed=1;" edge="1" parent="s1" source="valida" target="db-user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s1" source="map-rol" target="sesion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s1" source="sesion" target="auth-gate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;fontSize=10;" edge="1" parent="s1" source="auth-gate" target="dashboard" value="OK">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s1" source="dashboard" target="sidebar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#dc2626;fontSize=10;" edge="1" parent="s1" source="auth-gate" target="deny" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#db2777;fontSize=9;dashed=1;" edge="1" parent="s1" source="login" target="reset" value="¿Olvidó clave?">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#64748b;dashed=1;fontSize=9;" edge="1" parent="s1" source="workbeef" target="login" value="enlace">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#7c3aed;dashed=1;" edge="1" parent="s1" source="sesion" target="usab-login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 2. NAVEGACIÓN MÓDULOS ===== -->
+        <mxCell id="s2" value="2. NAVEGACIÓN POR MÓDULOS (sidebar)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="540" width="2120" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m-dash" value="Dashboard&#xa;index.php" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=11;fontStyle=1;" vertex="1" parent="s2">
+          <mxGeometry x="50" y="60" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m-est" value="Estadísticas&#xa;estadisticas.php" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=11;" vertex="1" parent="s2">
+          <mxGeometry x="200" y="60" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m-prog" value="Programación&#xa;programacion.php&#xa;(NÚCLEO)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cffafe;strokeColor=#0891b2;fontSize=11;fontStyle=1;" vertex="1" parent="s2">
+          <mxGeometry x="360" y="55" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m-cal" value="Calendario&#xa;view_data.php" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=11;" vertex="1" parent="s2">
+          <mxGeometry x="530" y="60" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m-log" value="Logística&#xa;logistica.php" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=11;" vertex="1" parent="s2">
+          <mxGeometry x="680" y="60" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m-otif" value="Calidad OTIF&#xa;otif.php" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=11;" vertex="1" parent="s2">
+          <mxGeometry x="830" y="60" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m-pers" value="Tablero personal&#xa;tablero_descansos.php&#xa;(Admin+)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=10;" vertex="1" parent="s2">
+          <mxGeometry x="990" y="55" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m-mae" value="Configuración&#xa;maestros.php&#xa;(Admin+)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=10;" vertex="1" parent="s2">
+          <mxGeometry x="1170" y="55" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m-usa" value="Usabilidad&#xa;tablero_usabilidad&#xa;(Super Admin)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=10;" vertex="1" parent="s2">
+          <mxGeometry x="1340" y="55" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m-pass" value="Cambiar password&#xa;/ Logout&#xa;/ WORKBEEF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=10;" vertex="1" parent="s2">
+          <mxGeometry x="1510" y="55" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m-note" value="Todos los módulos pasan por auth.php → conexion.php ($pdo) → lógica → HTML Tailwind" style="text;html=1;fontSize=11;fontColor=#334155;align=left;" vertex="1" parent="s2">
+          <mxGeometry x="50" y="150" width="700" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 3. FLUJO PROGRAMACIÓN ===== -->
+        <mxCell id="s3" value="3. FLUJO NÚCLEO — PROGRAMACIÓN OPERATIVA" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="770" width="2120" height="420" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-list" value="programacion.php&#xa;Listado filtrable&#xa;Agrupado por planta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cffafe;strokeColor=#0891b2;fontStyle=1;" vertex="1" parent="s3">
+          <mxGeometry x="40" y="60" width="150" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-acc" value="Acción" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=11;" vertex="1" parent="s3">
+          <mxGeometry x="230" y="55" width="100" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-nueva" value="nueva_programacion.php&#xa;• Genera ID_Programacion&#xa;• Catálogos por planta&#xa;• OPL → conductor/vehículo&#xa;• Campos OTIF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="s3">
+          <mxGeometry x="380" y="40" width="220" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-edit" value="editar_programacion.php&#xa;?id=id_interno&#xa;(solo Admin)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=10;" vertex="1" parent="s3">
+          <mxGeometry x="380" y="170" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-dup" value="Duplicar&#xa;nueva_programacion&#xa;?duplicar_de=…" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=10;" vertex="1" parent="s3">
+          <mxGeometry x="380" y="270" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-csrf" value="¿CSRF válido&#xa;+ ID único?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=11;" vertex="1" parent="s3">
+          <mxGeometry x="650" y="50" width="130" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-proc" value="procesar_programacion.php&#xa;1. Validar POST&#xa;2. Alta maestros opcionales (admin)&#xa;3. Vincular logisticos&#xa;4. INSERT Programacion&#xa;5. Redirect success" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;align=left;spacingLeft=8;fontSize=10;fontStyle=1;" vertex="1" parent="s3">
+          <mxGeometry x="830" y="35" width="250" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-cat" value="config/&#xa;programacion_catalogos.php&#xa;programacion_opl_logistica.php&#xa;logisticos_vinculo_maestro.php" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="s3">
+          <mxGeometry x="830" y="180" width="250" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-db" value="Programacion&#xa;ID_Programacion&#xa;Planta_Operativa&#xa;Cliente, OPL, kg&#xa;OTIF, Estado…" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=12;fontSize=10;" vertex="1" parent="s3">
+          <mxGeometry x="1140" y="50" width="150" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-mae-db" value="clientes / opl&#xa;conductor / vehiculo&#xa;solicitante&#xa;logisticos" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=10;fontSize=10;" vertex="1" parent="s3">
+          <mxGeometry x="1140" y="200" width="150" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-estados" value="Estados actividad&#xa;PROGRAMADO → EJECUTADO&#xa;/ CANCELADO&#xa;&#xa;Plantas: BENEFICIO&#xa;DESPOSTE · CELFRIO&#xa;SUBPRODUCTOS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="s3">
+          <mxGeometry x="1360" y="50" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p-ok" value="Listado&#xa;status=success" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontSize=11;" vertex="1" parent="s3">
+          <mxGeometry x="1600" y="70" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s3" source="p-list" target="p-acc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#0891b2;fontSize=10;" edge="1" parent="s3" source="p-acc" target="p-nueva" value="Nueva">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#e11d48;fontSize=10;" edge="1" parent="s3" source="p-acc" target="p-edit" value="Editar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#e11d48;fontSize=10;" edge="1" parent="s3" source="p-acc" target="p-dup" value="Duplicar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s3" source="p-nueva" target="p-csrf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe6" value="POST" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;fontSize=10;" edge="1" parent="s3" source="p-csrf" target="p-proc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s3" source="p-proc" target="p-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#64748b;dashed=1;" edge="1" parent="s3" source="p-proc" target="p-cat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;dashed=1;" edge="1" parent="s3" source="p-proc" target="p-mae-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s3" source="p-db" target="p-ok">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#0891b2;dashed=1;" edge="1" parent="s3" source="p-dup" target="p-nueva">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 4. MAESTROS ===== -->
+        <mxCell id="s4" value="4. CONFIGURACIÓN — CRUD GENÉRICO DE MAESTROS" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1220" width="2120" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-hub" value="maestros.php&#xa;Hub de tarjetas&#xa;(solo Admin)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontStyle=1;" vertex="1" parent="s4">
+          <mxGeometry x="40" y="60" width="140" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-white" value="¿tabla en&#xa;whitelist?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=11;" vertex="1" parent="s4">
+          <mxGeometry x="230" y="50" width="120" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-gest" value="gestion_tabla.php?tabla=X&#xa;1. DESCRIBE dinámico&#xa;2. Detectar PK / ID negocio&#xa;3. Listado + modales JS&#xa;4. CREATE / UPDATE / DELETE&#xa;5. calcularSiguienteIdNegocio" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;align=left;spacingLeft=8;fontSize=10;fontStyle=1;" vertex="1" parent="s4">
+          <mxGeometry x="400" y="40" width="280" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-user" value="tabla=user&#xa;¿Super Admin?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=10;" vertex="1" parent="s4">
+          <mxGeometry x="720" y="50" width="130" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-tabs" value="Whitelist:&#xa;clientes · corte · departamento · municipio&#xa;opl · producto · tipo_de_cuarteo · zona&#xa;vehiculo · conductor · solicitante · user&#xa;actividad · planta · logisticos&#xa;empleado · empleado_descanso · empleado_programacion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="s4">
+          <mxGeometry x="900" y="40" width="320" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-db" value="MySQL&#xa;tablas&#xa;maestras" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=10;fontSize=11;" vertex="1" parent="s4">
+          <mxGeometry x="1280" y="60" width="110" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-deny" value="Redirect&#xa;no_autorizado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;fontSize=10;" vertex="1" parent="s4">
+          <mxGeometry x="230" y="180" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s4" source="g-hub" target="g-white">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;fontSize=10;" edge="1" parent="s4" source="g-white" target="g-gest" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ge3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#dc2626;fontSize=10;" edge="1" parent="s4" source="g-white" target="g-deny" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ge4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s4" source="g-gest" target="g-user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ge5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;dashed=1;" edge="1" parent="s4" source="g-gest" target="g-tabs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ge6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s4" source="g-tabs" target="g-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 5. PERSONAL ===== -->
+        <mxCell id="s5" value="5. MÓDULO PERSONAL" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1530" width="1040" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe-board" value="tablero_descansos.php&#xa;Filtro año / semana ISO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontStyle=1;" vertex="1" parent="s5">
+          <mxGeometry x="40" y="60" width="180" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe-desc" value="personal_descanso_form&#xa;Alta / edición / borrado&#xa;ausencias" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="s5">
+          <mxGeometry x="280" y="40" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe-prog" value="personal_programacion_form&#xa;Turnos semanales&#xa;Actividad · Planta · Producto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="s5">
+          <mxGeometry x="280" y="130" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe-help" value="personal_helpers.php&#xa;Disponibilidad&#xa;Anti-solapes&#xa;Filtros día/semana" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=10;" vertex="1" parent="s5">
+          <mxGeometry x="520" y="70" width="160" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe-imp" value="empleados_importar.php&#xa;+ CSV helpers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="s5">
+          <mxGeometry x="40" y="160" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pe-db" value="empleado&#xa;empleado_descanso&#xa;empleado_programacion" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=10;fontSize=10;" vertex="1" parent="s5">
+          <mxGeometry x="740" y="60" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pee1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s5" source="pe-board" target="pe-desc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pee2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s5" source="pe-board" target="pe-prog">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pee3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#64748b;" edge="1" parent="s5" source="pe-desc" target="pe-help">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pee4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#64748b;" edge="1" parent="s5" source="pe-prog" target="pe-help">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pee5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s5" source="pe-help" target="pe-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pee6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;dashed=1;" edge="1" parent="s5" source="pe-imp" target="pe-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 6. ANALÍTICA ===== -->
+        <mxCell id="s6" value="6. ANALÍTICA Y CALENDARIO" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1530" width="1040" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a-dash" value="index.php&#xa;KPIs kg / viajes / OTIF&#xa;Chart.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="40" y="50" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="a-est" value="estadisticas.php&#xa;Planta · Cliente&#xa;Actividad · Producto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="220" y="50" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="a-otif" value="otif.php&#xa;% ejecutados&#xa;Pedido perfecto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="400" y="50" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="a-cal" value="view_data.php&#xa;FullCalendar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="40" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-evt" value="eventos_calendario.php&#xa;API JSON eventos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="220" y="150" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-db" value="SELECT / agregaciones&#xa;sobre Programacion&#xa;(fechas d/m/Y)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=10;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="580" y="70" width="170" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="a-log" value="logistica.php&#xa;Cruces conductor/vehículo&#xa;históricos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=10;" vertex="1" parent="s6">
+          <mxGeometry x="400" y="150" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ae1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s6" source="a-dash" target="a-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ae2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s6" source="a-est" target="a-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ae3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s6" source="a-otif" target="a-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ae4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s6" source="a-cal" target="a-evt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ae5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s6" source="a-evt" target="a-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ae6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#16a34a;" edge="1" parent="s6" source="a-log" target="a-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 7. ARQUITECTURA STACK ===== -->
+        <mxCell id="s7" value="7. ARQUITECTURA TÉCNICA (STACK)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#1e293b;fontColor=#ffffff;strokeColor=#0f172a;fontStyle=1;startSize=28;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1840" width="2120" height="220" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st1" value="PRESENTACIÓN&#xa;HTML5 + Tailwind CSS&#xa;Plus Jakarta Sans&#xa;JS + Chart.js + FullCalendar&#xa;Assets locales (offline)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="40" y="50" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="st2" value="PAGE CONTROLLERS&#xa;PHP 8 procedural&#xa;declare(strict_types=1)&#xa;auth.php · conexion.php&#xa;*.php por pantalla" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="320" y="50" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="st3" value="DOMINIO (config/)&#xa;programacion_*&#xa;personal_helpers&#xa;seguridad · mail&#xa;usabilidad · assets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="600" y="50" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="st4" value="PERSISTENCIA&#xa;MySQL PDO&#xa;db_logimeat utf8mb4&#xa;Prepared statements&#xa;conexion.local.php" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;size=14;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="880" y="40" width="200" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="st5" value="MANTENIMIENTO&#xa;scripts/*.php&#xa;config/*.sql&#xa;Migraciones / imports CLI&#xa;SMTP test" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="1140" y="50" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="st6" value="INTEGRACIÓN&#xa;WORKBEEF intranet&#xa;SMTP Colbeef / O365&#xa;Sin CDN · Sin Composer&#xa;Sin ORM / Sin SPA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="1400" y="50" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="st7" value="ROLES&#xa;Operativo&#xa;Administrador&#xa;Super Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#e11d48;fontSize=11;" vertex="1" parent="s7">
+          <mxGeometry x="1660" y="50" width="140" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ste1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s7" source="st1" target="st2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ste2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s7" source="st2" target="st3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ste3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#334155;" edge="1" parent="s7" source="st3" target="st4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== FOOTER ===== -->
+        <mxCell id="footer" value="Documentación asociada: DOCUMENTACION.md · Abrir este archivo en diagrams.net / draw.io · LogiMeat · Colbeef SAS · 2026" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=12;fontColor=#64748b;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2090" width="2120" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Link visual from sidebar modules note to section 3 - cross lane connectors at root level -->
+        <mxCell id="cross1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#0891b2;strokeWidth=2;dashed=1;fontSize=11;fontColor=#0891b2;" edge="1" parent="1" source="m-prog" target="p-list" value="flujo detalle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cross2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#e11d48;strokeWidth=2;dashed=1;fontSize=11;fontColor=#e11d48;" edge="1" parent="1" source="m-mae" target="g-hub" value="flujo detalle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cross3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#e11d48;strokeWidth=2;dashed=1;fontSize=11;fontColor=#e11d48;" edge="1" parent="1" source="m-pers" target="pe-board" value="flujo detalle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cross4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#7c3aed;strokeWidth=2;dashed=1;" edge="1" parent="1" source="sidebar" target="m-dash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

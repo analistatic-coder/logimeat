@@ -31,7 +31,7 @@ $actividades = $pdo->query('SELECT ID_Actividad, Actividad FROM Actividad ORDER 
 
 $plantas = programacion_plantas_opciones();
 $productosJson = json_encode(programacion_productos_por_planta(), JSON_UNESCAPED_UNICODE);
-$cuarteoJson = json_encode(programacion_tipos_cuarteo_por_planta(), JSON_UNESCAPED_UNICODE);
+$cuarteoJson = json_encode(programacion_tipos_cuarteo_por_planta($pdo), JSON_UNESCAPED_UNICODE);
 
 $grupoRes = programacion_grupo_desde_fila($prog);
 $plantaKey = $grupoRes !== '_SIN' ? $grupoRes : 'BENEFICIO';
@@ -66,11 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!programacion_es_producto_valido($plantaOp, $producto)) {
         $error = 'El producto no corresponde a la planta.';
     } else {
-        $tcList = programacion_tipos_cuarteo_por_planta()[$plantaOp] ?? [];
-        if ($tcList === []) {
+        $requiereCuarteoEdit = mb_strtoupper($producto, 'UTF-8') === 'CANALES';
+        if (!$requiereCuarteoEdit) {
             $tipoCuarteo = '';
+        } elseif ($tipoCuarteo !== '' && !programacion_es_tipo_cuarteo_valido($plantaOp, $tipoCuarteo, $pdo)) {
+            $error = 'Tipo de cuarteo no válido. Agréguelo en Configuración › Tipo de Cuarteo.';
         }
 
+        if ($error === '') {
         $fechaFmt = $fechaOp !== '' ? date('d/m/Y', strtotime($fechaOp)) : $prog['Fecha_de_Operacion'];
 
         $idPlantaMaestro = programacion_id_maestro_desde_grupo($plantaOp);
@@ -104,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         header('Location: programacion.php?msj=editado');
         exit();
+        }
         }
     }
 }
@@ -293,9 +297,13 @@ if (!empty($prog['Hora'])) {
                     if (x === curTc) { o.selected = true; }
                     tc.appendChild(o);
                 });
-                wrapC.style.display = list.length ? 'block' : 'none';
+                var productoActual = (prod.value || '').trim().toUpperCase();
+                var mostrar = productoActual === 'CANALES' && list.length > 0;
+                if (!mostrar) { tc.value = ''; }
+                wrapC.style.display = mostrar ? 'block' : 'none';
             }
             planta.addEventListener('change', function () { curProd = ''; curTc = ''; refillProd(); refillCuarteo(); });
+            prod.addEventListener('change', refillCuarteo);
             refillProd();
             refillCuarteo();
         })();

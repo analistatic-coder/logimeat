@@ -47,7 +47,7 @@ foreach ($actividadesRequeridas as $nombreReq) {
 
 $plantas = programacion_plantas_opciones();
 $productosJson = json_encode(programacion_productos_por_planta(), JSON_UNESCAPED_UNICODE);
-$cuarteoJson = json_encode(programacion_tipos_cuarteo_por_planta(), JSON_UNESCAPED_UNICODE);
+$cuarteoJson = json_encode(programacion_tipos_cuarteo_por_planta($pdo), JSON_UNESCAPED_UNICODE);
 
 $solicitantes = [];
 $medios = [];
@@ -316,6 +316,15 @@ if ($dupId > 0 && lm_es_admin()) {
                     <select name="tipo_cuarteo" id="tipo_cuarteo" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-800">
                         <option value="">—</option>
                     </select>
+                    <?php if ($puedeCrearMaestros): ?>
+                    <button type="button" id="btn_nuevo_cuarteo" class="mt-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:underline">
+                        + Crear nuevo tipo de cuarteo
+                    </button>
+                    <div id="wrap_nuevo_cuarteo" class="mt-2 hidden">
+                        <input type="text" id="tipo_cuarteo_nuevo_texto" name="tipo_cuarteo_nuevo" class="w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-slate-800" placeholder="Ej. CLIENTE, ESPECIAL…" autocomplete="off">
+                        <p class="mt-1 text-[10px] text-emerald-800 font-semibold leading-snug">Se guarda en <strong>Configuración › Tipo de Cuarteo</strong> y queda disponible para todas las programaciones (igual que crear un cliente nuevo).</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-[9px] font-black text-slate-500 uppercase mb-1">Actividad *</label>
@@ -691,9 +700,13 @@ if ($dupId > 0 && lm_es_admin()) {
                     tc.appendChild(o);
                 });
                 var productoActual = (prod.value || '').trim().toUpperCase();
-                var mostrarCuarteo = productoActual === 'CANALES' && list.length > 0;
+                var mostrarCuarteo = productoActual === 'CANALES' && (list.length > 0 || puedeCrearMaestros);
                 if (!mostrarCuarteo) {
                     tc.value = '';
+                    var txtNuevo = document.getElementById('tipo_cuarteo_nuevo_texto');
+                    var wrapNuevo = document.getElementById('wrap_nuevo_cuarteo');
+                    if (txtNuevo) txtNuevo.value = '';
+                    if (wrapNuevo) wrapNuevo.classList.add('hidden');
                 }
                 wrapC.style.display = mostrarCuarteo ? 'block' : 'none';
             }
@@ -714,6 +727,7 @@ if ($dupId > 0 && lm_es_admin()) {
             }
             wireCrearNuevo('btn_nuevo_cliente', 'wrap_nuevo_cliente', 'cliente_nuevo_texto', document.getElementById('cliente_select'));
             wireCrearNuevo('btn_nuevo_solicitante', 'wrap_nuevo_solicitante', 'solicitante_nuevo_texto', document.getElementById('solicitante_select'));
+            wireCrearNuevo('btn_nuevo_cuarteo', 'wrap_nuevo_cuarteo', 'tipo_cuarteo_nuevo_texto', tc);
             wireCrearNuevo('btn_nuevo_opl', 'wrap_nuevo_opl', 'opl_nuevo_texto', selOpl, function (abrioDesdeOculto) {
                 if (!abrioDesdeOculto) {
                     limpiarOplNuevoExtras();
