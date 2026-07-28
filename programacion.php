@@ -472,9 +472,36 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
         }
         .compact-table thead th.sticky-r {
             position: sticky; right: 0; top: 0; z-index: 35;
-            width: auto; min-width: 5.25rem; max-width: 6rem;
+            width: auto; min-width: 11.5rem; max-width: 13.5rem;
             background: #f1f5f9; box-shadow: -1px 0 0 #e2e8f0, 0 1px 0 #e2e8f0;
         }
+        .prog-acciones {
+            display: inline-flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+        }
+        .prog-acciones a,
+        .prog-acciones button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.3rem;
+            font-size: 8px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            border-width: 1px;
+            border-style: solid;
+            cursor: pointer;
+        }
+        .prog-acciones form { display: inline; margin: 0; padding: 0; }
         .compact-table tbody td.sticky-l1 {
             position: sticky; left: 0; z-index: 20;
             width: 3.5rem; min-width: 3.5rem; max-width: 3.5rem;
@@ -489,7 +516,7 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
         }
         .compact-table tbody td.sticky-r {
             position: sticky; right: 0; z-index: 20;
-            width: auto; min-width: 5.25rem; max-width: 6rem;
+            width: auto; min-width: 11.5rem; max-width: 13.5rem;
             background: #fff;
             box-shadow: -1px 0 0 #f1f5f9;
             vertical-align: middle;
@@ -771,17 +798,17 @@ $logoProgMarkup = programacion_markup_logo_colbeef($logoProgDirAssets);
                                         <span class="status-pill <?= $class ?>"><?= htmlspecialchars($st ?: '—') ?></span>
                                 </td>
                                     <td class="text-slate-600 whitespace-nowrap"><?= htmlspecialchars((string) ($r['Telefono'] ?? '')) ?></td>
-                                    <td class="text-center sticky-r whitespace-nowrap px-1 py-1.5 align-top">
-                                        <div class="flex flex-col items-stretch gap-1">
+                                    <td class="text-center sticky-r whitespace-nowrap px-1 py-1 align-middle">
+                                        <div class="prog-acciones">
                                         <?php if ($puedeSeleccionColumnas): ?>
-                                        <a href="nueva_programacion.php?duplicar_de=<?= (int) ($r['id_interno'] ?? 0) ?>" class="rounded-md border border-emerald-100 bg-emerald-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-emerald-800 hover:bg-emerald-100" title="Duplicar como nueva programación">Duplicar</a>
+                                        <a href="nueva_programacion.php?duplicar_de=<?= (int) ($r['id_interno'] ?? 0) ?>" class="border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100" title="Duplicar como nueva programación">Dup</a>
                                         <?php endif; ?>
-                                        <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="rounded-md border border-blue-100 bg-blue-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-blue-800 hover:bg-blue-100" title="Editar programación">Editar</a>
+                                        <a href="editar_programacion.php?id=<?= (int) ($r['id_interno'] ?? 0) ?>" class="border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100" title="Editar programación">Edit</a>
                                         <?php if ($puedeSeleccionColumnas): ?>
-                                        <form method="post" action="eliminar_programacion.php" class="m-0" onsubmit="return confirm('¿Eliminar esta programación de forma permanente? Esta acción no se puede deshacer.');">
+                                        <form method="post" action="eliminar_programacion.php" onsubmit="return confirm('¿Eliminar esta programación de forma permanente? Esta acción no se puede deshacer.');">
                                             <?= lm_csrf_field() ?>
                                             <input type="hidden" name="id_interno" value="<?= (int) ($r['id_interno'] ?? 0) ?>">
-                                            <button type="submit" class="w-full rounded-md border border-rose-100 bg-rose-50 px-1.5 py-1 text-[9px] font-black uppercase leading-tight text-rose-800 hover:bg-rose-100" title="Eliminar programación">Eliminar</button>
+                                            <button type="submit" class="border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100" title="Eliminar programación">Elim</button>
                                         </form>
                                         <?php endif; ?>
                                         </div>
