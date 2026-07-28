@@ -15,6 +15,20 @@ $idProgGen = programacion_generar_id_programacion();
 $nextInterno = programacion_siguiente_id_interno_preview($pdo);
 $puedeCrearMaestros = lm_es_admin();
 
+/** Token de un solo uso: evita doble insert por doble clic / reenvío del formulario. */
+$submitNonce = bin2hex(random_bytes(16));
+if (!isset($_SESSION['lm_prog_submit_tokens']) || !is_array($_SESSION['lm_prog_submit_tokens'])) {
+    $_SESSION['lm_prog_submit_tokens'] = [];
+}
+$ahoraTok = time();
+foreach ($_SESSION['lm_prog_submit_tokens'] as $tokK => $tokMeta) {
+    $ts = is_array($tokMeta) ? (int) ($tokMeta['ts'] ?? 0) : 0;
+    if ($ts < $ahoraTok - 7200) {
+        unset($_SESSION['lm_prog_submit_tokens'][$tokK]);
+    }
+}
+$_SESSION['lm_prog_submit_tokens'][$submitNonce] = ['used' => false, 'ts' => $ahoraTok];
+
 $clientes = $pdo->query('SELECT ID_Cliente, Cliente FROM Clientes ORDER BY Cliente ASC')->fetchAll(PDO::FETCH_ASSOC);
 $actividades = $pdo->query('SELECT ID_Actividad, Actividad FROM Actividad ORDER BY Actividad ASC')->fetchAll(PDO::FETCH_ASSOC);
 
@@ -207,9 +221,10 @@ if ($dupId > 0 && lm_es_admin()) {
             </div>
         </header>
 
-        <form action="procesar_programacion.php" method="POST" class="max-w-5xl bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm space-y-10">
+        <form action="procesar_programacion.php" method="POST" id="form_nueva_programacion" class="max-w-5xl bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm space-y-10">
             <?= lm_csrf_field() ?>
             <input type="hidden" name="id_programacion_generado" value="<?= htmlspecialchars($idProgGen, ENT_QUOTES, 'UTF-8') ?>">
+            <input type="hidden" name="submit_nonce" value="<?= htmlspecialchars($submitNonce, ENT_QUOTES, 'UTF-8') ?>">
 
             <section class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <h2 class="md:col-span-2 text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em]">Identificadores (solo lectura)</h2>
@@ -534,7 +549,7 @@ if ($dupId > 0 && lm_es_admin()) {
             </section>
 
             <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
-                <button type="submit" class="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-500">Guardar programación</button>
+                <button type="submit" id="btn_guardar_programacion" class="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed">Guardar programación</button>
                 <a href="programacion.php" class="flex-1 bg-slate-100 text-slate-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-center border border-slate-200 hover:bg-slate-200">Cancelar</a>
             </div>
         </form>
@@ -745,16 +760,31 @@ if ($dupId > 0 && lm_es_admin()) {
             if (dupVehiculoPost && selVeh) {
                 selVeh.value = dupVehiculoPost;
             }
-            var formProg = document.querySelector('form[action="procesar_programacion.php"]');
-            if (formProg && puedeCrearMaestros) {
+            var formProg = document.getElementById('form_nueva_programacion') || document.querySelector('form[action="procesar_programacion.php"]');
+            if (formProg) {
+                var enviando = false;
                 formProg.addEventListener('submit', function (ev) {
-                    var cs = document.getElementById('cliente_select');
-                    var ct = document.getElementById('cliente_nuevo_texto');
-                    if (!cs || !ct) return;
-                    var ok = (cs.value && String(cs.value).trim() !== '') || (ct.value && ct.value.trim() !== '');
-                    if (!ok) {
+                    if (enviando) {
                         ev.preventDefault();
-                        window.alert('Seleccione un cliente o indique el nombre del cliente nuevo.');
+                        return;
+                    }
+                    if (puedeCrearMaestros) {
+                        var cs = document.getElementById('cliente_select');
+                        var ct = document.getElementById('cliente_nuevo_texto');
+                        if (cs && ct) {
+                            var ok = (cs.value && String(cs.value).trim() !== '') || (ct.value && ct.value.trim() !== '');
+                            if (!ok) {
+                                ev.preventDefault();
+                                window.alert('Seleccione un cliente o indique el nombre del cliente nuevo.');
+                                return;
+                            }
+                        }
+                    }
+                    enviando = true;
+                    var btn = document.getElementById('btn_guardar_programacion');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = 'Guardando…';
                     }
                 });
             }

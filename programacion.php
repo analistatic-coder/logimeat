@@ -17,6 +17,9 @@ switch ($msjFlash) {
     case 'editado':
         $flashOk = 'Programación actualizada.';
         break;
+    case 'ya_guardado':
+        $flashOk = 'La programación ya estaba guardada (no se creó un duplicado).';
+        break;
     case 'csrf':
         $flashErr = 'Sesión de seguridad caducada. Intente de nuevo.';
         break;
@@ -189,16 +192,30 @@ $sqlJoins = '
              = CAST(mdc.ID_Medio_Comunicacion AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
         LEFT JOIN municipio mun ON p.Ciudad = mun.c
         LEFT JOIN tipo_de_cuarteo tc
-            ON (
-                CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
-                 = CAST(tc.ID_Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
-                OR UPPER(TRIM(CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
-                 = UPPER(TRIM(CAST(tc.Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+            ON tc.id_interno = (
+                SELECT tcx.id_interno
+                FROM tipo_de_cuarteo tcx
+                WHERE CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+                      = CAST(tcx.ID_Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+                   OR UPPER(TRIM(CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+                      = UPPER(TRIM(CAST(tcx.Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+                ORDER BY
+                    CASE
+                        WHEN UPPER(TRIM(CAST(tcx.Tipo_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+                             = UPPER(TRIM(CAST(p.Tipo_de_Cuarteo AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci))
+                        THEN 0 ELSE 1
+                    END,
+                    tcx.id_interno ASC
+                LIMIT 1
             )
-        LEFT JOIN opl oplm ON (
-            p.OPL = oplm.ID_OPL
-            OR CAST(p.OPL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
-             = CAST(oplm.ID_OPL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+        LEFT JOIN opl oplm ON oplm.ID_OPL = (
+            SELECT ox.ID_OPL
+            FROM opl ox
+            WHERE p.OPL = ox.ID_OPL
+               OR CAST(p.OPL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+                = CAST(ox.ID_OPL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci
+            ORDER BY ox.ID_OPL ASC
+            LIMIT 1
         )
         LEFT JOIN conductor cond
             ON CAST(p.Conductor AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci

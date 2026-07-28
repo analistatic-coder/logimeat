@@ -54,6 +54,16 @@ if (!lm_csrf_validar($_POST['_csrf'] ?? null)) {
     die('Solicitud no válida o sesión de seguridad caducada. Vuelva a abrir «Nueva programación» e intente de nuevo.');
 }
 
+$submitNonce = trim((string) ($_POST['submit_nonce'] ?? ''));
+if ($submitNonce === '' || !isset($_SESSION['lm_prog_submit_tokens'][$submitNonce]) || !is_array($_SESSION['lm_prog_submit_tokens'][$submitNonce])) {
+    die('Formulario inválido o caducado. Vuelva a abrir «Nueva programación» e intente de nuevo.');
+}
+if (!empty($_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'])) {
+    // Reenvío / doble clic: no insertar otra vez.
+    header('Location: programacion.php?status=success&msj=ya_guardado');
+    exit();
+}
+
 $idProg = trim((string) ($_POST['id_programacion_generado'] ?? ''));
 if (!programacion_id_programacion_valido($idProg)) {
     die('Identificador de programación inválido o manipulado. Vuelva a cargar «Nueva programación».');
@@ -63,7 +73,10 @@ try {
     $dup = $pdo->prepare('SELECT 1 FROM Programacion WHERE ID_Programacion = ? LIMIT 1');
     $dup->execute([$idProg]);
     if ($dup->fetchColumn()) {
-        die('Ese ID de programación ya existe (los identificadores no pueden repetirse). Abra de nuevo «Nueva programación» para generar otro código único.');
+        $_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'] = true;
+        // Mismo ID ya grabado (reintento): no duplicar.
+        header('Location: programacion.php?status=success&msj=ya_guardado');
+        exit();
     }
 } catch (Throwable) {
 }
@@ -236,6 +249,13 @@ if ($relO['usaFiltro'] && trim($opl) !== '' && $conductorNuevo === '' && $vehicu
 }
 
 try {
+    // Evita doble insert (doble clic): token de un solo uso + check de ID.
+    if (!empty($_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'])) {
+        header('Location: programacion.php?status=success&msj=ya_guardado');
+        exit();
+    }
+    $_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'] = true;
+
     $sql = 'INSERT INTO Programacion (
         ID_Programacion, Fecha_de_Registro, Solicitante, Medio_de_Comunicacion, Estado,
         Cliente, Planta, Planta_Operativa, Actividad, Fecha_de_Operacion, Hora,
@@ -284,9 +304,18 @@ try {
     $msg = $e->getMessage();
     $code = (string) $e->getCode();
     if ($code === '23000' || str_contains($msg, 'Duplicate') || str_contains($msg, '1062')) {
-        die('No se pudo guardar: un identificador ya existía (no se permiten duplicados). Vuelva a «Nueva programación» e intente otra vez.');
+        $_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'] = true;
+        header('Location: programacion.php?status=success&msj=ya_guardado');
+        exit();
+    }
+    // Fallo real: permitir reintento con el mismo formulario.
+    if (isset($_SESSION['lm_prog_submit_tokens'][$submitNonce])) {
+        $_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'] = false;
     }
     die('Error al guardar: ' . htmlspecialchars($msg));
 } catch (Throwable $e) {
+    if (isset($_SESSION['lm_prog_submit_tokens'][$submitNonce])) {
+        $_SESSION['lm_prog_submit_tokens'][$submitNonce]['used'] = false;
+    }
     die('Error al guardar: ' . htmlspecialchars($e->getMessage()));
 }
